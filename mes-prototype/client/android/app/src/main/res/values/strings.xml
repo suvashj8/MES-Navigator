@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Navigator Bead for Life MES</string>
+    <string name="title_activity_main">Navigator Bead for Life MES</string>
+    <string name="package_name">com.navigatorbead.mes</string>
+    <string name="custom_url_scheme">com.navigatorbead.mes</string>
+</resources>

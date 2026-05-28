@@ -1,0 +1,71 @@
+@import "tailwindcss";
+
+body {
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+/* --- Light mode overrides (prototype-friendly) --- */
+:root.theme-light body {
+  /* Softer “daylight” theme (not pure white) */
+  @apply bg-slate-100 text-slate-900;
+}
+
+:root.theme-light .bg-slate-950 { background-color: rgb(241 245 249) !important; } /* slate-100 */
+:root.theme-light .bg-slate-900 { background-color: rgb(248 250 252) !important; } /* slate-50 */
+:root.theme-light .bg-slate-900\/80 { background-color: rgb(248 250 252 / 0.92) !important; }
+:root.theme-light .bg-slate-900\/95 { background-color: rgb(248 250 252 / 0.96) !important; }
+:root.theme-light .bg-slate-800 { background-color: rgb(226 232 240) !important; } /* slate-200 */
+:root.theme-light .bg-slate-800\/50 { background-color: rgb(226 232 240 / 0.7) !important; }
+:root.theme-light .bg-slate-800\/40 { background-color: rgb(226 232 240 / 0.6) !important; }
+:root.theme-light .bg-slate-950\/40 { background-color: rgb(248 250 252 / 0.75) !important; }
+:root.theme-light .bg-black\/60 { background-color: rgb(15 23 42 / 0.55) !important; }
+:root.theme-light .bg-black\/70 { background-color: rgb(15 23 42 / 0.6) !important; }
+
+:root.theme-light .border-slate-800 { border-color: rgb(148 163 184) !important; } /* slate-400 */
+:root.theme-light .border-slate-700 { border-color: rgb(148 163 184) !important; }
+:root.theme-light .border-slate-700\/50 { border-color: rgb(148 163 184 / 0.75) !important; }
+
+:root.theme-light .text-slate-100 { color: rgb(15 23 42) !important; }
+:root.theme-light .text-slate-200 { color: rgb(15 23 42) !important; }
+:root.theme-light .text-slate-300 { color: rgb(30 41 59) !important; }
+:root.theme-light .text-slate-400 { color: rgb(51 65 85) !important; } /* slate-700 */
+:root.theme-light .text-slate-500 { color: rgb(71 85 105) !important; } /* slate-600 */
+
+:root.theme-light .floor-card { border-color: rgb(148 163 184 / 0.75) !important; }
+
+.safe-pb {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes entry-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  30% {
+    background-color: rgb(6 78 59 / 0.35);
+  }
+}
+
+@media (max-width: 767px) {
+  .floor-input {
+    @apply text-lg py-3.5 min-h-[48px] rounded-xl;
+  }
+  .floor-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-slate-400;
+  }
+  .floor-card {
+    @apply rounded-2xl border border-slate-700/50 bg-slate-900 p-4;
+  }
+}

@@ -1,0 +1,35 @@
+# Node / Vite
+**/node_modules/
+**/dist/
+**/.vite/
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Env / secrets
+.env
+.env.*
+
+# SQLite DB (prototype data)
+**/mes.db
+**/*.db
+**/*.db-journal
+**/*.db-wal
+**/*.db-shm
+
+# Local exports
+**/*.csv
+**/*.pdf
+
+# Local spreadsheets / data dumps
+bed for life.xlsx
+
