@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { db } from './db.js';
-import { publicUser } from './scope.js';
+import { one, run } from './db.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mes-prototype-secret-change-in-production';
 const TOKEN_HOURS = 12;
@@ -34,10 +33,13 @@ function userPayload(row) {
   };
 }
 
-export function seedDefaultUsers() {
-  const count = db.prepare('SELECT COUNT(*) as c FROM users').get().c;
+export async function seedDefaultUsers() {
+  const countRow = await one('SELECT COUNT(*)::int AS c FROM users');
+  const count = countRow?.c ?? 0;
   if (count > 0) {
-    db.prepare("UPDATE users SET department = 'Production' WHERE username = 'supervisor' AND department IS NULL").run();
+    await run(
+      "UPDATE users SET department = 'Production' WHERE username = 'supervisor' AND department IS NULL"
+    );
     return;
   }
 
@@ -47,17 +49,17 @@ export function seedDefaultUsers() {
     { username: 'operator', password: 'oper123', role: 'operator', display_name: 'Floor Operator', department: null },
   ];
 
-  const insert = db.prepare(
-    'INSERT INTO users (username, password_hash, role, display_name, department) VALUES (?, ?, ?, ?, ?)'
-  );
   for (const u of users) {
-    insert.run(u.username, bcrypt.hashSync(u.password, 10), u.role, u.display_name, u.department);
+    await run(
+      'INSERT INTO users (username, password_hash, role, display_name, department) VALUES (?, ?, ?, ?, ?)',
+      [u.username, bcrypt.hashSync(u.password, 10), u.role, u.display_name, u.department]
+    );
   }
   console.log('Default users seeded (admin / supervisor / operator)');
 }
 
-export function login(username, password) {
-  const user = db.prepare('SELECT * FROM users WHERE username = ? AND is_active = 1').get(username);
+export async function login(username, password) {
+  const user = await one('SELECT * FROM users WHERE username = ? AND is_active = 1', [username]);
   if (!user || !bcrypt.compareSync(password, user.password_hash)) {
     return null;
   }
@@ -74,7 +76,7 @@ export function verifyToken(token) {
   }
 }
 
-export function refreshUserFromDb(jwtUser) {
-  const row = db.prepare('SELECT * FROM users WHERE id = ? AND is_active = 1').get(jwtUser.id);
+export async function refreshUserFromDb(jwtUser) {
+  const row = await one('SELECT * FROM users WHERE id = ? AND is_active = 1', [jwtUser.id]);
   return row ? userPayload(row) : jwtUser;
 }

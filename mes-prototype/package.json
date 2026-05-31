@@ -7,6 +7,8 @@
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run dev --prefix server",
     "seed": "npm run seed --prefix server",
+    "db:setup": "npm run db:setup --prefix server",
+    "migrate:from-sqlite": "npm run migrate:from-sqlite --prefix server",
     "build": "npm run build --prefix client"
   },
   "devDependencies": {

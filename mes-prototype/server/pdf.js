@@ -93,3 +93,109 @@ export function streamWorkerPdf(res, detail) {
   if (!entries.length) doc.text('No entries in period.');
   doc.end();
 }
+
+const VAT_LABELS = {
+  standard_13: 'Standard (13%)',
+  zero_0: 'Zero-rated (0%)',
+  exempt: 'Exempt (Schedule-1)',
+};
+
+function yn(v) {
+  return v ? 'Yes' : 'No';
+}
+
+export function streamProductMasterPdf(res, bundle) {
+  const { product, accountMapping, exciseMappings } = bundle;
+  const safeCode = String(product.code || 'product').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="product-${safeCode}.pdf"`);
+  doc.pipe(res);
+
+  doc.fontSize(16).text('Navigator Bead for Life MES — Product Master', { align: 'center' });
+  doc.moveDown(0.4);
+  doc.fontSize(12).text(`${product.code} — ${product.description}`, { align: 'center' });
+  doc.moveDown(0.8);
+  doc.fontSize(9).fillColor('#000');
+
+  function section(title) {
+    if (doc.y > 700) doc.addPage();
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text(title);
+    doc.font('Helvetica').fontSize(9).fillColor('#000');
+    doc.moveDown(0.35);
+  }
+
+  function fieldRow(label, value) {
+    if (doc.y > 740) doc.addPage();
+    doc.text(`${label}: ${value ?? ''}`);
+  }
+
+  section('Basic information');
+  fieldRow('Code', product.code);
+  fieldRow('Description', product.description);
+  fieldRow('UOM', product.base_uom);
+  fieldRow('Type', product.type);
+  fieldRow('Product type', product.product_type);
+  fieldRow('Nature', product.product_nature);
+  fieldRow('VAT (Nepal)', VAT_LABELS[product.vat_category] || product.vat_category);
+  fieldRow('HS code', product.hs_code);
+  fieldRow('Buy price', product.buy_price);
+  fieldRow('Buy disc %', product.buy_disc_pct);
+  fieldRow('Sales price', product.sales_price);
+  fieldRow('Sales disc %', product.sales_disc_pct);
+  fieldRow('MRP', product.mrp);
+  fieldRow('Warranty rate', product.warranty_rate);
+  fieldRow('Product harmonic', product.product_harmonic);
+
+  section('Stock');
+  fieldRow('Double qty', yn(product.double_qty));
+  fieldRow('Alt UOM', product.alt_uom);
+  fieldRow('Fix conversion', yn(product.fix_conversion));
+  fieldRow('Base value', product.base_value);
+  fieldRow('Alt value', product.alt_value);
+  fieldRow('Location', product.location);
+  fieldRow('Alternative code', product.alternative_code);
+  fieldRow('Max stock', product.max_stock);
+  fieldRow('Min stock', product.min_stock);
+  fieldRow('Reorder level', product.reorder_level);
+  fieldRow('Additional desc change', yn(product.additional_desc_change));
+  for (let i = 1; i <= 5; i++) {
+    const v = product[`additional_desc${i}`];
+    if (v) fieldRow(`Additional desc ${i}`, v);
+  }
+
+  section('Account mapping');
+  if (!accountMapping.length) {
+    doc.text('(no rows)');
+  } else {
+    for (const [i, row] of accountMapping.entries()) {
+      if (doc.y > 720) doc.addPage();
+      doc.font('Helvetica-Bold').text(`Row ${i + 1}`);
+      doc.font('Helvetica');
+      fieldRow('  Group', row.group_name);
+      fieldRow('  Subgroup', row.subgroup_name);
+      fieldRow('  Sales account', row.sales_account);
+      fieldRow('  Sales return', row.sales_return_account);
+      fieldRow('  Purchase account', row.purchase_account);
+      fieldRow('  Purchase return', row.purchase_return_account);
+      fieldRow('  Opening stock', row.opening_stock_account);
+      fieldRow('  Closing stock P/L', row.closing_stock_pl_account);
+      fieldRow('  Stock in hand', row.stock_in_hand_account);
+      doc.moveDown(0.2);
+    }
+  }
+
+  section('Excise');
+  if (!exciseMappings.length) {
+    doc.text('(no rows)');
+  } else {
+    for (const [i, row] of exciseMappings.entries()) {
+      if (doc.y > 720) doc.addPage();
+      doc.text(`Row ${i + 1}: Code ${row.excise_code || '—'}  |  Rate ${row.rate ?? '—'}  |  Notes ${row.notes || '—'}`);
+    }
+  }
+
+  doc.moveDown(0.5);
+  doc.fontSize(8).fillColor('#666').text(`Exported ${new Date().toISOString().slice(0, 19).replace('T', ' ')} UTC`);
+  doc.end();
+}

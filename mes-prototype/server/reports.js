@@ -1,4 +1,5 @@
 import { GRADE_POINTS } from './db.js';
+import { one, all } from './db.js';
 
 const GRADE_ORDER = ['AA', 'A', 'B', 'C'];
 
@@ -9,7 +10,7 @@ function ratingFromAvg(avg) {
   return 'Needs Improvement';
 }
 
-export function getScorecards(db, { from, to, department, staff_id }) {
+export async function getScorecards({ from, to, department, staff_id, family, group_name }) {
   let sql = `
     SELECT
       s.id as staff_id,
@@ -29,23 +30,26 @@ export function getScorecards(db, { from, to, department, staff_id }) {
       SUM(CASE WHEN dg.grade = 'AA' THEN 1 ELSE 0 END) as grade_aa
     FROM staff s
     INNER JOIN daily_grading dg ON dg.staff_id = s.id
+    LEFT JOIN products p ON p.code = dg.prod_code
     WHERE dg.deleted_at IS NULL AND dg.entry_date >= ? AND dg.entry_date <= ?
   `;
   const params = [from, to];
   if (department) { sql += ' AND s.department = ?'; params.push(department); }
   if (staff_id) { sql += ' AND s.id = ?'; params.push(staff_id); }
+  if (family) { sql += ' AND p.family = ?'; params.push(family); }
+  if (group_name) { sql += ' AND p.group_name = ?'; params.push(group_name); }
   sql += ' GROUP BY s.id ORDER BY avg_score DESC, s.reg_no';
 
-  const rows = db.prepare(sql).all(...params);
+  const rows = await all(sql, params);
 
   return rows.map((r) => {
-    const total = r.total_entries || 0;
+    const total = Number(r.total_entries) || 0;
     const avg = r.avg_score ?? 0;
     const dist = {
-      C: r.grade_c,
-      B: r.grade_b,
-      A: r.grade_a,
-      AA: r.grade_aa,
+      C: Number(r.grade_c),
+      B: Number(r.grade_b),
+      A: Number(r.grade_a),
+      AA: Number(r.grade_aa),
     };
     const pct = (g) => (total ? Math.round((dist[g] / total) * 100) : 0);
     return {
@@ -54,7 +58,7 @@ export function getScorecards(db, { from, to, department, staff_id }) {
       staff_name: r.staff_name,
       department: r.department,
       total_entries: total,
-      days_worked: r.days_worked,
+      days_worked: Number(r.days_worked),
       total_quantity: r.total_quantity,
       total_w_min: round(r.total_w_min, 2),
       avg_score: round(avg, 2),
@@ -93,38 +97,45 @@ export function getPeriodRange(period, anchor) {
   };
 }
 
-export function getWorkerDetail(db, staffId, { from, to }) {
-  const staff = db.prepare('SELECT * FROM staff WHERE id = ?').get(staffId);
+export async function getWorkerDetail(staffId, { from, to, family, group_name }) {
+  const staff = await one('SELECT * FROM staff WHERE id = ?', [staffId]);
   if (!staff) return null;
 
-  const summary = getScorecards(db, { from, to, staff_id: staffId })[0] || null;
+  const summary = (await getScorecards({ from, to, staff_id: staffId, family, group_name }))[0] || null;
 
-  const entries = db.prepare(`
+  const params = [staffId, from, to];
+  let sql = `
     SELECT dg.*, gs.prod_name, gs.cost_center_name
     FROM daily_grading dg
+    LEFT JOIN products p ON p.code = dg.prod_code
     LEFT JOIN grading_standards gs
       ON gs.prod_code = dg.prod_code AND gs.cost_center_code = dg.cost_center_code
     WHERE dg.deleted_at IS NULL AND dg.staff_id = ? AND dg.entry_date >= ? AND dg.entry_date <= ?
-    ORDER BY dg.entry_date DESC, dg.id DESC
-  `).all(staffId, from, to);
+  `;
+  if (family) { sql += ' AND p.family = ?'; params.push(family); }
+  if (group_name) { sql += ' AND p.group_name = ?'; params.push(group_name); }
+  sql += ' ORDER BY dg.entry_date DESC, dg.id DESC';
+
+  const entries = await all(sql, params);
 
   return { staff, summary, entries, from, to };
 }
 
-export function getDashboardTrend(db, endDate, days = 7) {
+export async function getDashboardTrend(endDate, days = 7) {
   const end = new Date(endDate + 'T12:00:00');
   const start = new Date(end);
   start.setDate(start.getDate() - (days - 1));
   const from = start.toISOString().slice(0, 10);
   const to = end.toISOString().slice(0, 10);
 
-  const rows = db.prepare(`
-    SELECT entry_date, grade, COUNT(*) as count
-    FROM daily_grading
-    WHERE deleted_at IS NULL AND entry_date >= ? AND entry_date <= ?
-    GROUP BY entry_date, grade
-    ORDER BY entry_date
-  `).all(from, to);
+  const rows = await all(
+    `SELECT entry_date, grade, COUNT(*)::int as count
+     FROM daily_grading
+     WHERE deleted_at IS NULL AND entry_date >= ? AND entry_date <= ?
+     GROUP BY entry_date, grade
+     ORDER BY entry_date`,
+    [from, to]
+  );
 
   const byDate = {};
   for (let i = 0; i < days; i++) {
@@ -135,8 +146,8 @@ export function getDashboardTrend(db, endDate, days = 7) {
   }
   for (const r of rows) {
     if (!byDate[r.entry_date]) continue;
-    byDate[r.entry_date].grades[r.grade] = r.count;
-    byDate[r.entry_date].total += r.count;
+    byDate[r.entry_date].grades[r.grade] = Number(r.count);
+    byDate[r.entry_date].total += Number(r.count);
   }
   return { from, to, days: Object.values(byDate) };
 }
@@ -144,5 +155,5 @@ export function getDashboardTrend(db, endDate, days = 7) {
 function round(n, d) {
   if (n == null) return 0;
   const f = 10 ** d;
-  return Math.round(n * f) / f;
+  return Math.round(Number(n) * f) / f;
 }

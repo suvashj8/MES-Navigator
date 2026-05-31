@@ -1,0 +1,7 @@
+.env
+node_modules/
+mes.db
+mes.db.*
+*.sqlite
+*.sqlite3
+postgres-migration-manifest.json

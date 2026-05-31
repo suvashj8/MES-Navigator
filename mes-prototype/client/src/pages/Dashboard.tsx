@@ -128,10 +128,40 @@ export default function Dashboard() {
 
       <DepartmentBanner />
 
+      {!loading && data && (data.productsWithoutRulesCount ?? 0) > 0 && (
+        <div className="mb-6 rounded-xl border border-sky-500/35 bg-sky-500/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm text-sky-100">
+            <p className="font-semibold">
+              {data.productsWithoutRulesCount} product{data.productsWithoutRulesCount === 1 ? '' : 's'} need a grading rule
+            </p>
+            <p className="text-sky-200/80 text-xs mt-1">
+              These exist in Product Master ({data.productMasterCount ?? '—'} total) but have no work-station rule yet. Daily
+              entry cannot grade them until you add C/B/A/A+ thresholds.
+            </p>
+          </div>
+          {can('standards:read') && (
+            <Link
+              to="/standards"
+              className="shrink-0 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-semibold"
+            >
+              Set up grading rules →
+            </Link>
+          )}
+        </div>
+      )}
+
+      {!loading && data && (data.productsWithoutRulesCount ?? 0) === 0 && (data.productMasterCount ?? 0) > 0 && (
+        <div className="mb-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">
+          All {data.productMasterCount} Product Master item{data.productMasterCount === 1 ? '' : 's'} have at least one
+          grading rule ({data.standardsCount} rule{data.standardsCount === 1 ? '' : 's'} total).
+        </div>
+      )}
+
       {loading ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+            <SkeletonCard /><SkeletonCard />
           </div>
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6 animate-pulse">
             <div className="h-4 w-56 bg-slate-800 rounded mb-4" />
@@ -154,12 +184,22 @@ export default function Dashboard() {
         </>
       ) : data ? (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
             {[
               { label: 'Entries Today', value: data.todayEntries, color: 'text-amber-300' },
               { label: 'This Week (workers)', value: data.weekWorkersGraded, color: 'text-sky-300' },
               { label: 'This Week (entries)', value: data.weekEntries, color: 'text-violet-300' },
               { label: 'Active Staff', value: data.staffCount, color: 'text-emerald-300' },
+              {
+                label: 'Product Master',
+                value: data.productMasterCount ?? 0,
+                color: 'text-slate-200',
+              },
+              {
+                label: 'Need grading rule',
+                value: data.productsWithoutRulesCount ?? 0,
+                color: (data.productsWithoutRulesCount ?? 0) > 0 ? 'text-sky-300' : 'text-emerald-300',
+              },
             ].map((s) => (
               <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
                 <p className="text-xs text-slate-400 uppercase tracking-wide">{s.label}</p>

@@ -39,7 +39,7 @@ export default function DateInput({
   }, [value]);
 
   async function onBsChange(bsVal: string) {
-    const trimmed = bsVal.trim();
+    const trimmed = bsVal.trim().replace(/^-+/, '');
     setBs(trimmed);
     if (!trimmed || trimmed.length < 8) return;
     try {

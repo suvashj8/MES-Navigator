@@ -18,6 +18,7 @@ import CommandPalette from './components/CommandPalette';
 import MissingStandards from './pages/MissingStandards';
 import SyncCenter from './pages/SyncCenter';
 import DeletedEntries from './pages/DeletedEntries';
+import ProductMaster from './pages/ProductMaster';
 
 type NavGroup = 'Production' | 'Reports' | 'Setup';
 type NavItem = { to: string; label: string; group: NavGroup; permission?: string; icon: React.ReactNode };
@@ -118,6 +119,7 @@ const navItems: NavItem[] = [
 
   { to: '/sync', label: 'Sync Center', group: 'Reports', permission: 'daily-grading:write', icon: icons.reports },
   { to: '/deleted-entries', label: 'Deleted entries', group: 'Reports', permission: 'daily-grading:delete', icon: icons.reports },
+  { to: '/product-master', label: 'Product master', group: 'Setup', permission: 'reports:read', icon: icons.standards },
   { to: '/standards', label: 'Grading rules', group: 'Setup', permission: 'standards:read', icon: icons.standards },
   { to: '/missing-standards', label: 'Missing standards', group: 'Setup', permission: 'standards:read', icon: icons.standards },
   { to: '/activity-mapping', label: 'Job ↔ work station', group: 'Setup', permission: 'activity-mapping:write', icon: icons.mapping },
@@ -166,6 +168,7 @@ const MainRoutes = memo(function MainRoutes({
         <Route path="/standards" element={<ProtectedRoute permission="standards:read"><Standards /></ProtectedRoute>} />
         <Route path="/missing-standards" element={<ProtectedRoute permission="standards:read"><MissingStandards /></ProtectedRoute>} />
         <Route path="/activity-mapping" element={<ProtectedRoute permission="activity-mapping:write"><ActivityMapping /></ProtectedRoute>} />
+        <Route path="/product-master" element={<ProtectedRoute permission="reports:read"><ProductMaster /></ProtectedRoute>} />
         <Route path="/staff" element={<ProtectedRoute permission="reports:read"><StaffMaster /></ProtectedRoute>} />
         <Route path="/users" element={<ProtectedRoute permission="users:manage"><Users /></ProtectedRoute>} />
         <Route path="/profile" element={<Profile />} />

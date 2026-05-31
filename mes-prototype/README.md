@@ -1,28 +1,36 @@
 # MES Prototype — Daily Worker Performance & Grading
 
-Prototype for **Bed for Life** manufacturing, based on `bed for life.xlsx`.
+Prototype for **Navigator Bead for Life** manufacturing (based on `bed for life.xlsx`).
 
 ## Features
 
 | Module | Description |
 |--------|-------------|
 | **Auth & Roles** | Operator, Supervisor, Admin with role-based access |
-| **Dashboard** | Daily grade distribution & department summary |
+| **Dashboard** | Daily grade distribution, department summary, 7-day trend |
 | **Daily Grading** | Record quantity → auto-calculate grade |
-| **Scorecards** | Weekly & monthly worker performance reports |
-| **Grading Standards** | View/add/edit/delete product × cost center rules |
+| **Floor Entry** | Mobile-friendly grading screen (`/floor`) |
+| **Scorecards** | Weekly, monthly, or custom date range |
+| **Product Master** | ERP-style product catalog (Basic, Stock, Account mapping, Excise) |
+| **Grading Rules** | Product × cost center standards (requires Product Master) |
 | **Activity Mapping** | Link activities to cost centers (admin) |
-| **Staff Master** | Browse & add workers (admin) |
+| **Staff Master** | Browse workers; add staff (admin) |
 | **User Management** | Create/edit users & roles (admin) |
-| **CSV Export** | Download scorecard & daily grading reports |
-| **Custom date range** | Scorecards for any from–to period |
-| **Worker detail** | Per-worker printable scorecard with entry list |
-| **Dashboard trend** | 7-day grading activity chart |
-| **Profile** | Change your password & display name |
-| **PDF Reports** | Download scorecards & worker detail as PDF |
+| **Exports** | CSV/PDF scorecards, daily grading CSV, Product Master CSV/PDF |
+| **Print** | Product Master form (sections only, no action bar) |
 | **Nepali (BS) dates** | AD ↔ Bikram Sambat on date fields |
 | **Supervisor scope** | Supervisors see only their department |
-| **Floor Entry** | Mobile-friendly grading screen (`/floor`) |
+| **Themes** | Dark (default) and light (sage/mint accents) |
+
+## Product Master flow
+
+1. Add products under **Setup → Product master** (supervisor/admin can save), **or** use **Grading rules → Create missing products & link all** to import codes from existing rules.
+2. Create **Grading rules** using products from Product Master (each rule stores `product_master_id`).
+3. **Daily grading** / **Floor entry** only accepts products that exist in Product Master.
+
+**Linking:** On Grading rules, unlinked rows show when `prod_code` has no matching Product Master code. Use **Create missing products & link all** to auto-create master records from rule names, or **Link matching codes only** if products already exist with the same code.
+
+Saves are **atomic**: product row + account mapping + excise mapping commit in one database transaction.
 
 ## Roles & Permissions
 
@@ -31,14 +39,16 @@ Prototype for **Bed for Life** manufacturing, based on `bed for life.xlsx`.
 | Daily grading entry | ✓ | ✓ | ✓ |
 | Delete daily entries | | ✓ | ✓ |
 | View reports/scorecards | ✓ | ✓ | ✓ |
-| View grading standards | ✓ | ✓ | ✓ |
-| Add/edit/delete standards | | ✓ | ✓ |
+| View Product Master | ✓ | ✓ | ✓ |
+| Edit Product Master | | ✓ | ✓ |
+| View grading rules | ✓ | ✓ | ✓ |
+| Add/edit/delete grading rules | | ✓ | ✓ |
 | Activity ↔ cost center mapping | | | ✓ |
 | User management | | | ✓ |
 | Add staff | | | ✓ |
-| Export scorecards CSV | ✓ | ✓ | ✓ |
+| Export reports / Product Master | ✓ | ✓ | ✓ |
 
-### Demo logins
+### Demo logins (change before production)
 
 | Username | Password | Role |
 |----------|----------|------|
@@ -57,18 +67,69 @@ Prototype for **Bed for Life** manufacturing, based on `bed for life.xlsx`.
 
 ## Quick Start
 
+**Requires PostgreSQL** (no SQLite). Create a database, then configure the server:
+
 ```powershell
 cd "C:\Users\rakesh\Desktop\Suvash project\new project\mes-prototype"
+cd server
+copy .env.example .env
+# Edit .env with your Postgres host, user, password, and DB_NAME=mes_prototype
 npm install
-cd server; npm install; cd ..
+npm run db:setup
+cd ..
+npm install
 npm run seed
 npm run dev
 ```
 
-- **UI:** http://localhost:5173
-- **API:** http://localhost:3001
+`npm run db:setup` creates the `mes_prototype` database and applies `server/schema.sql`. On startup, the API also runs `initSchema()` (idempotent).
+
+- **UI:** http://localhost:5173  
+- **API:** http://localhost:3001  
+
+## Database
+
+The app uses **PostgreSQL only** (via `pg`). Configure `server/.env` from `.env.example` (`DATABASE_URL` or `DB_HOST` / `DB_NAME` / etc.).
+
+On server start, `initSchema()` applies `server/schema.sql` (idempotent) and syncs cost centers from grading rules.
+
+**Product code rename:** Updating a Product Master code automatically updates linked grading rules and daily grading entries.
+
+Run `node server/scripts/db-audit.js` to verify tables and row counts.
+
+### Migrating from old `mes.db` (SQLite)
+
+If you still have `server/mes.db` from an earlier install, run **once** after Postgres is configured:
+
+```powershell
+cd mes-prototype\server
+npm run migrate:from-sqlite
+```
+
+See [DATABASE.md](DATABASE.md) for details. The app never reads `mes.db` after migration; the file is renamed to `.bak`.
+
+## Environment (optional)
+
+Copy `server/.env.example` to `server/.env` for production overrides:
+
+| Variable | Notes |
+|----------|--------|
+| `JWT_SECRET` | Required in production (default is insecure) |
+| `PORT` | Example file shows 3000; dev server uses **3001** unless you change `server/index.js` |
 
 ## Tech Stack
 
-- React + Vite + Tailwind (frontend)
-- Express + SQLite + JWT (backend)
+- React + Vite + Tailwind (frontend, PWA-capable)
+- Express + **PostgreSQL (pg)** + JWT (backend)
+- PDFKit for PDF exports
+
+## Project layout
+
+```
+mes-prototype/
+  client/          React UI
+  server/          Express API + schema.sql
+  README.md        This file
+```
+
+Other `*.md` guides in the repo may describe Postgres or older APIs; trust this README for day-to-day dev.

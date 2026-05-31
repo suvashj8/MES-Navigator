@@ -10,6 +10,11 @@ import DepartmentBanner from '../components/DepartmentBanner';
 import { labels } from '../labels';
 import Spinner from '../components/Spinner';
 import { loadOfflineQueue, offlineQueueKey, saveOfflineQueue, syncOfflineQueue as syncQueue } from '../offlineQueue';
+import {
+  blockNegativeNumberKey,
+  parseNonNegativeNumber,
+  sanitizeNonNegativeIntegerInput,
+} from '../utils/numericInput';
 
 export default function DailyEntryPage({ floorMode = false }: { floorMode?: boolean }) {
   const { can, user } = useAuth();
@@ -245,8 +250,8 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
   }, [missingStandard, prodCode, costCenter]);
 
   useEffect(() => {
-    const qty = parseFloat(quantity);
-    if (!standard || isNaN(qty) || qty < 0) { setPreview(null); return; }
+    const qty = parseNonNegativeNumber(quantity, NaN);
+    if (!standard || !Number.isFinite(qty) || qty < 0) { setPreview(null); return; }
     api.previewGrade({ prod_code: prodCode, cost_center_code: costCenter, quantity: qty, entry_date: date })
       .then(setPreview).catch(() => setPreview(null));
   }, [standard, quantity, prodCode, costCenter, date]);
@@ -260,7 +265,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setError('');
-    if (!staffId || !prodCode || !costCenter || !quantity || !preview) {
+    if (!staffId || !prodCode || !costCenter || quantity.trim() === '' || !preview) {
       setError('Fill all required fields');
       return;
     }
@@ -285,7 +290,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
         staff_id: Number(staffId),
         prod_code: prodCode,
         cost_center_code: costCenter,
-        quantity: parseFloat(quantity),
+        quantity: parseNonNegativeNumber(quantity),
         remarks,
       });
 
@@ -344,7 +349,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
           staff_id: Number(staffId),
           prod_code: prodCode,
           cost_center_code: costCenter,
-          quantity: parseFloat(quantity),
+          quantity: parseNonNegativeNumber(quantity),
           remarks,
         };
         // De-dupe exact same key.
@@ -900,7 +905,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
                 !costCenter
                   ? labels.pickWorkStationFirst.en
                   : nextStep === 'product'
-                    ? 'Search and select product'
+                    ? 'Products from Product Master (with a grading rule for this station)'
                     : undefined
               }
               hintClassName={!costCenter ? 'text-orange-400' : 'text-amber-400/90'}
@@ -927,6 +932,9 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
                           className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700">
                           <span className="font-mono text-amber-200/90">{p.prod_code}</span>
                           <span className="text-slate-400 ml-2 truncate">{p.prod_name}</span>
+                          {p.base_uom && (
+                            <span className="text-slate-500 text-xs ml-1">· {p.base_uom}</span>
+                          )}
                         </button>
                       </li>
                     ))}
@@ -972,14 +980,14 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
                 </button>
                 <input
                   ref={quantityInputRef}
-                  type="number"
-                  min="0"
-                  step="1"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
+                  onChange={(e) => setQuantity(sanitizeNonNegativeIntegerInput(e.target.value))}
+                  onKeyDown={blockNegativeNumberKey}
                   className={controlCls(!quantityEnabled)}
-                  inputMode="numeric"
                   disabled={!quantityEnabled}
                   placeholder={quantityEnabled ? '0' : '—'}
                 />

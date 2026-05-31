@@ -62,10 +62,11 @@ export const api = {
     return request<Dashboard>(`/dashboard${qs ? `?${qs}` : ''}`);
   },
 
-  staff: (params?: { department?: string; q?: string }) => {
+  staff: (params?: { department?: string; q?: string; all?: boolean }) => {
     const q = new URLSearchParams();
     if (params?.department) q.set('department', params.department);
     if (params?.q) q.set('q', params.q);
+    if (params?.all) q.set('all', '1');
     return request<Staff[]>(`/staff?${q}`);
   },
 
@@ -75,11 +76,79 @@ export const api = {
   costCenters: (activity_id?: number) =>
     request<CostCenter[]>(`/cost-centers${activity_id ? `?activity_id=${activity_id}` : ''}`),
 
-  standardProducts: (params?: { q?: string; cost_center_code?: string }) => {
+  standardProducts: (params?: {
+    q?: string;
+    cost_center_code?: string;
+    /** When false, lists all Product Master items (for grading rules setup). Default true. */
+    require_standard?: boolean;
+  }) => {
     const q = new URLSearchParams();
     if (params?.q) q.set('q', params.q);
     if (params?.cost_center_code) q.set('cost_center_code', params.cost_center_code);
+    if (params?.require_standard === false) q.set('require_standard', '0');
     return request<StandardProduct[]>(`/grading-standards/products?${q}`);
+  },
+
+  products: (params?: { q?: string; department?: string; family?: string; group?: string; offset?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.q) q.set('q', params.q);
+    if (params?.department) q.set('department', params.department);
+    if (params?.family) q.set('family', params.family);
+    if (params?.group) q.set('group', params.group);
+    if (params?.offset != null) q.set('offset', String(params.offset));
+    if (params?.limit != null) q.set('limit', String(params.limit));
+    return request<Paginated<Product>>(`/products?${q}`);
+  },
+  productDetail: (code: string) => request<ProductDetail>(`/products/${encodeURIComponent(code)}`),
+  autoSyncProducts: () =>
+    request<{ ok: boolean; created: number; updated: number; total: number }>(`/products/auto-sync`, { method: 'POST' }),
+  createProduct: (body: Partial<Product> & { code: string; name: string }) =>
+    request<Product>(`/products`, { method: 'POST', body: JSON.stringify(body) }),
+  updateProduct: (code: string, body: Partial<Product> & { name?: string }) =>
+    request<Product>(`/products/${encodeURIComponent(code)}`, { method: 'PUT', body: JSON.stringify(body) }),
+  replaceProductComponents: (code: string, components: ProductComponent[]) =>
+    request<{ ok: boolean; components: ProductComponent[] }>(`/products/${encodeURIComponent(code)}/components`, {
+      method: 'PUT',
+      body: JSON.stringify({ components }),
+    }),
+
+  productMasterList: (params?: { q?: string; offset?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.q) q.set('q', params.q);
+    if (params?.offset != null) q.set('offset', String(params.offset));
+    if (params?.limit != null) q.set('limit', String(params.limit));
+    return request<Paginated<ProductMasterListRow>>(`/product-master?${q}`);
+  },
+  productMasterDetail: (id: number) => request<ProductMasterDetail>(`/product-master/${id}`),
+  createProductMaster: (body: ProductMasterSaveInput) =>
+    request<ProductMasterDetail>(`/product-master`, { method: 'POST', body: JSON.stringify(body) }),
+  updateProductMaster: (id: number, body: ProductMasterSaveInput) =>
+    request<ProductMasterDetail>(`/product-master/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  replaceProductMasterAccountMapping: (id: number, rows: ProductAccountMappingRowInput[]) =>
+    request<{ ok: boolean; rows: ProductAccountMappingRow[] }>(`/product-master/${id}/account-mapping`, {
+      method: 'PUT',
+      body: JSON.stringify({ rows }),
+    }),
+  replaceProductMasterExciseMapping: (id: number, rows: ProductExciseMappingRowInput[]) =>
+    request<{ ok: boolean; rows: ProductExciseMappingRow[] }>(`/product-master/${id}/excise-mapping`, {
+      method: 'PUT',
+      body: JSON.stringify({ rows }),
+    }),
+
+  exportProductMasterCsv: async (id: number) => {
+    const headers: Record<string, string> = {};
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE}/product-master/${id}/export.csv`, { headers });
+    if (!res.ok) throw new Error('CSV export failed');
+    return res.blob();
+  },
+
+  exportProductMasterPdf: async (id: number) => {
+    const headers: Record<string, string> = {};
+    if (authToken) headers.Authorization = `Bearer ${authToken}`;
+    const res = await fetch(`${BASE}/product-master/${id}/export.pdf`, { headers });
+    if (!res.ok) throw new Error('PDF export failed');
+    return res.blob();
   },
 
   activityMappings: () => request<ActivityMapping[]>('/activity-mappings'),
@@ -100,6 +169,15 @@ export const api = {
     request<GradingStandard>(`/grading-standards/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteStandard: (id: number) =>
     request<{ ok: boolean }>(`/grading-standards/${id}`, { method: 'DELETE' }),
+
+  gradingStandardsLinkSummary: () =>
+    request<GradingStandardsLinkSummary>('/grading-standards/product-master-link'),
+
+  linkGradingStandardsToProductMaster: (createMissing = true) =>
+    request<GradingStandardsLinkResult>('/grading-standards/product-master-link', {
+      method: 'POST',
+      body: JSON.stringify({ create_missing: createMissing }),
+    }),
 
   lookupStandard: (prod_code: string, cost_center_code: string, entry_date?: string) => {
     const params = new URLSearchParams({ prod_code, cost_center_code });
@@ -178,6 +256,8 @@ export const api = {
 
   createStaff: (body: { reg_no: number; name: string; department: string; photo_data?: string | null }) =>
     request<Staff>('/staff', { method: 'POST', body: JSON.stringify(body) }),
+  updateStaff: (id: number, body: { is_active: number }) =>
+    request<Staff>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
   updateProfile: (body: { display_name?: string; password?: string }) =>
     request<{ user: User }>('/auth/profile', { method: 'PATCH', body: JSON.stringify(body) }),
@@ -276,6 +356,7 @@ export interface Staff {
   name: string;
   department: string;
   photo_data?: string | null;
+  is_active?: number;
 }
 
 export interface Activity {
@@ -299,7 +380,167 @@ export interface CostCenter {
 export interface StandardProduct {
   prod_code: string;
   prod_name: string;
+  base_uom?: string | null;
+  product_type?: string | null;
+  product_nature?: string | null;
 }
+
+export interface Product {
+  code: string;
+  name: string;
+  family?: string | null;
+  group_name?: string | null;
+  parent_item_no?: string | null;
+  uom?: string | null;
+  ref_department?: string | null;
+  source: 'auto' | 'manual';
+  created_at?: string;
+  updated_at?: string | null;
+}
+
+export type ProductComponent =
+  | {
+      id?: number;
+      product_code?: string;
+      component_type: 'article';
+      component_code: string;
+      component_name?: string | null;
+      component_text?: null;
+      qty_per_assembly: number;
+      uom?: string | null;
+      sort_order?: number;
+    }
+  | {
+      id?: number;
+      product_code?: string;
+      component_type: 'free_text';
+      component_code?: null;
+      component_name?: null;
+      component_text: string;
+      qty_per_assembly: number;
+      uom?: string | null;
+      sort_order?: number;
+    };
+
+export interface ProductDetail {
+  product: Product;
+  components: ProductComponent[];
+}
+
+export type VatCategory = 'standard_13' | 'zero_0' | 'exempt';
+
+export interface ProductMasterListRow {
+  id: number;
+  code: string;
+  description: string;
+  base_uom: string | null;
+  type: string | null;
+  product_type: string | null;
+  product_nature: string | null;
+  vat_category: VatCategory;
+  hs_code: string | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+export interface ProductMaster {
+  id: number;
+  code: string;
+  description: string;
+  base_uom: string | null;
+  type: string | null;
+  product_type: string | null;
+  product_nature: string | null;
+  vat_category: VatCategory;
+  hs_code: string | null;
+  buy_price: number | null;
+  buy_disc_pct: number | null;
+  sales_price: number | null;
+  sales_disc_pct: number | null;
+  mrp: number | null;
+  warranty_rate: number | null;
+  product_harmonic: string | null;
+  double_qty: number;
+  alt_uom: string | null;
+  fix_conversion: number;
+  base_value: number | null;
+  alt_value: number | null;
+  location: string | null;
+  alternative_code: string | null;
+  max_stock: number | null;
+  min_stock: number | null;
+  reorder_level: number | null;
+  additional_desc_change: number;
+  additional_desc1: string | null;
+  additional_desc2: string | null;
+  additional_desc3: string | null;
+  additional_desc4: string | null;
+  additional_desc5: string | null;
+  created_at: string;
+  updated_at: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export type ProductMasterInput = Partial<
+  Omit<
+    ProductMaster,
+    | 'id'
+    | 'created_at'
+    | 'updated_at'
+    | 'created_by'
+    | 'updated_by'
+    | 'double_qty'
+    | 'fix_conversion'
+    | 'additional_desc_change'
+    | 'vat_category'
+  >
+> & {
+  code: string;
+  description: string;
+  vat_category: VatCategory;
+  double_qty?: boolean;
+  fix_conversion?: boolean;
+  additional_desc_change?: boolean;
+};
+
+export interface ProductAccountMappingRow {
+  id: number;
+  product_id: number;
+  group_name: string | null;
+  subgroup_name: string | null;
+  sales_account: string | null;
+  sales_return_account: string | null;
+  purchase_account: string | null;
+  purchase_return_account: string | null;
+  opening_stock_account: string | null;
+  closing_stock_pl_account: string | null;
+  stock_in_hand_account: string | null;
+}
+
+export type ProductAccountMappingRowInput = Partial<Omit<ProductAccountMappingRow, 'id' | 'product_id'>>;
+
+export interface ProductExciseMappingRow {
+  id: number;
+  product_id: number;
+  excise_code: string | null;
+  rate: number | null;
+  notes: string | null;
+}
+
+export type ProductExciseMappingRowInput = Partial<Omit<ProductExciseMappingRow, 'id' | 'product_id'>>;
+
+export interface ProductMasterDetail {
+  product: ProductMaster;
+  accountMapping: ProductAccountMappingRow[];
+  exciseMappings: ProductExciseMappingRow[];
+}
+
+/** Product + account/excise mappings saved in one API transaction */
+export type ProductMasterSaveInput = ProductMasterInput & {
+  accountMapping?: ProductAccountMappingRowInput[];
+  exciseMappings?: ProductExciseMappingRowInput[];
+};
 
 export interface AppUser {
   id: number;
@@ -340,6 +581,32 @@ export interface GradingStandard {
   a_value: number;
   aplus_value: number;
   effective_date: string | null;
+  product_master_id?: number | null;
+  master_description?: string | null;
+  master_base_uom?: string | null;
+  master_type?: string | null;
+  master_product_nature?: string | null;
+  master_vat_category?: string | null;
+  in_product_master?: number;
+}
+
+export interface GradingStandardsLinkProduct {
+  prod_code: string;
+  prod_name: string;
+  rule_count: number;
+}
+
+export interface GradingStandardsLinkSummary {
+  totalRules: number;
+  linkedRules: number;
+  unlinkedRules: number;
+  unlinkedProducts: GradingStandardsLinkProduct[];
+}
+
+export interface GradingStandardsLinkResult extends GradingStandardsLinkSummary {
+  ok: boolean;
+  productsCreated: number;
+  rulesLinked: number;
 }
 
 export interface StandardInput {
@@ -430,6 +697,8 @@ export interface Dashboard {
   todayEntries: number;
   staffCount: number;
   standardsCount: number;
+  productMasterCount?: number;
+  productsWithoutRulesCount?: number;
   gradeDist: { grade: string; count: number }[];
   deptSummary: { department: string; grade: string; count: number }[];
   trend: { from: string; to: string; days: TrendDay[] };

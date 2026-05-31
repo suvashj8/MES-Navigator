@@ -4,10 +4,192 @@ body {
   @apply bg-slate-950 text-slate-100 antialiased;
 }
 
-/* --- Light mode overrides (prototype-friendly) --- */
+/* --- App component primitives (used across pages) --- */
+.card {
+  @apply rounded-2xl border border-slate-800 bg-slate-900/80;
+}
+
+.input {
+  @apply rounded-xl border border-slate-700/60 bg-slate-950/40 px-3 py-2 text-slate-100 placeholder:text-slate-500 outline-none;
+  @apply focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/20;
+}
+
+.input-sm {
+  @apply rounded-md border border-slate-700/60 bg-slate-950/40 px-2 py-1 text-xs text-slate-100 placeholder:text-slate-500 outline-none min-h-[26px];
+  @apply focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/20;
+}
+
+select.input-sm {
+  @apply pr-6;
+}
+
+.btn-sm {
+  @apply inline-flex items-center justify-center rounded-md border border-slate-700/60 bg-slate-900 px-2 py-1 text-xs font-medium text-slate-100 min-h-[26px];
+  @apply hover:bg-slate-800/70 disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.pm-section {
+  @apply rounded-lg border border-slate-800 bg-slate-900/80 p-2.5;
+}
+
+.pm-section-title {
+  @apply text-[11px] font-semibold uppercase tracking-wide text-amber-200/80 border-b border-slate-800 pb-1 mb-2;
+}
+
+/* Product Master toolbar */
+.pm-toolbar {
+  @apply mt-1 rounded border border-slate-800/90 bg-slate-900/60 px-2 py-1.5;
+}
+
+.pm-toolbar-label {
+  @apply text-[10px] font-medium text-slate-500 shrink-0 leading-none;
+}
+
+.pm-toolbar-field {
+  @apply rounded-md border border-slate-700/60 bg-slate-950/40 px-2 text-xs text-slate-100 placeholder:text-slate-500 outline-none;
+  @apply focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/20;
+  @apply w-[14rem] max-w-full shrink-0 box-border;
+  height: 1.625rem;
+  min-height: 1.625rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
+select.pm-toolbar-field {
+  padding-right: 1.5rem;
+}
+
+.pm-toolbar-link {
+  @apply text-[10px] font-medium text-amber-400/90 hover:text-amber-300 hover:underline shrink-0 leading-none;
+  @apply bg-transparent border-0 p-0 min-h-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.pm-toolbar-meta {
+  @apply text-[10px] text-slate-500 whitespace-nowrap shrink-0 leading-none;
+}
+
+:root.theme-light .pm-toolbar {
+  @apply border-slate-300 bg-slate-50;
+}
+
+:root.theme-light .pm-toolbar-link {
+  color: var(--pm-mint-accent);
+}
+
+:root.theme-light .pm-toolbar-link:hover {
+  color: var(--pm-mint-accent-hover);
+}
+
+:root.theme-light .pm-toolbar-label,
+:root.theme-light .pm-toolbar-meta {
+  color: var(--pm-sage-500);
+}
+
+:root.theme-light .pm-section-title {
+  color: var(--pm-mint-accent);
+  border-color: rgb(156 184 173 / 0.55);
+}
+
+:root.theme-light .pm-toolbar-field {
+  @apply border-slate-300 bg-white text-slate-900;
+}
+
+select.input {
+  @apply pr-8;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-xl border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-100;
+  @apply hover:bg-slate-800/70 active:translate-y-[0.5px] disabled:opacity-50 disabled:pointer-events-none;
+}
+
+.btn-primary {
+  @apply border-amber-500/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/20;
+}
+
+.table {
+  @apply border-separate border-spacing-0;
+}
+
+.table thead th {
+  @apply sticky top-0 bg-slate-900/95 backdrop-blur text-xs font-semibold uppercase tracking-wide text-slate-400;
+  @apply border-b border-slate-800 px-3 py-2;
+}
+
+.table tbody td {
+  @apply border-b border-slate-800 px-3 py-2 align-top;
+}
+
+.table tbody tr:hover td {
+  @apply bg-slate-900/60;
+}
+
+/* --- Light mode: black primary text, sage / pastel mint accents --- */
+:root.theme-light {
+  --pm-text-primary: #0f172a;
+  --pm-sage-800: #2f4f44;
+  --pm-sage-700: #3d5f52;
+  --pm-sage-600: #4a6f5f;
+  --pm-sage-500: #5b7f6d;
+  --pm-sage-400: #6b9080;
+  --pm-mint-300: #7fa896;
+  --pm-mint-200: #9cb8ab;
+  --pm-mint-accent: #52796f;
+  --pm-mint-accent-hover: #3f6356;
+}
+
 :root.theme-light body {
   /* Softer “daylight” theme (not pure white) */
-  @apply bg-slate-100 text-slate-900;
+  @apply bg-slate-100;
+  color: var(--pm-text-primary);
+}
+
+:root.theme-light .card {
+  @apply border-slate-300 bg-white;
+}
+
+:root.theme-light .input {
+  @apply border-slate-300 bg-white text-slate-900;
+  @apply focus:border-amber-600/60 focus:ring-amber-600/15;
+}
+
+:root.theme-light .input::placeholder,
+:root.theme-light .input-sm::placeholder,
+:root.theme-light .pm-toolbar-field::placeholder {
+  color: var(--pm-mint-300) !important;
+}
+
+:root.theme-light .input-sm {
+  @apply border-slate-300 bg-white text-slate-900;
+}
+
+:root.theme-light .btn-sm {
+  @apply border-slate-300 bg-white text-slate-900 hover:bg-slate-50;
+}
+
+:root.theme-light .pm-section {
+  @apply border-slate-300 bg-white;
+}
+
+:root.theme-light .btn {
+  @apply border-slate-300 bg-white text-slate-900 hover:bg-slate-50;
+}
+
+:root.theme-light .btn-primary {
+  @apply border-amber-600/40 bg-amber-500/15 text-slate-900 hover:bg-amber-500/20;
+}
+
+:root.theme-light .table thead th {
+  @apply bg-white border-slate-200;
+  color: var(--pm-sage-600);
+}
+
+:root.theme-light .table tbody td {
+  @apply border-slate-200;
+}
+
+:root.theme-light .table tbody tr:hover td {
+  @apply bg-slate-50;
 }
 
 :root.theme-light .bg-slate-950 { background-color: rgb(241 245 249) !important; } /* slate-100 */
@@ -25,11 +207,40 @@ body {
 :root.theme-light .border-slate-700 { border-color: rgb(148 163 184) !important; }
 :root.theme-light .border-slate-700\/50 { border-color: rgb(148 163 184 / 0.75) !important; }
 
-:root.theme-light .text-slate-100 { color: rgb(15 23 42) !important; }
-:root.theme-light .text-slate-200 { color: rgb(15 23 42) !important; }
-:root.theme-light .text-slate-300 { color: rgb(30 41 59) !important; }
-:root.theme-light .text-slate-400 { color: rgb(51 65 85) !important; } /* slate-700 */
-:root.theme-light .text-slate-500 { color: rgb(71 85 105) !important; } /* slate-600 */
+/* Primary UI copy stays black */
+:root.theme-light .text-slate-100,
+:root.theme-light .text-slate-200,
+:root.theme-light .text-slate-900 {
+  color: var(--pm-text-primary) !important;
+}
+
+/* Secondary / muted copy → sage & pastel mint */
+:root.theme-light .text-slate-300 { color: var(--pm-sage-600) !important; }
+:root.theme-light .text-slate-400 { color: var(--pm-sage-500) !important; }
+:root.theme-light .text-slate-500 { color: var(--pm-sage-400) !important; }
+:root.theme-light .text-slate-600 { color: var(--pm-sage-600) !important; }
+:root.theme-light .text-slate-700 { color: var(--pm-sage-700) !important; }
+
+:root.theme-light .text-amber-200,
+:root.theme-light .text-amber-200\/80,
+:root.theme-light .text-amber-300,
+:root.theme-light .text-amber-400 {
+  color: var(--pm-mint-accent) !important;
+}
+
+:root.theme-light .text-amber-700,
+:root.theme-light .text-amber-800 {
+  color: var(--pm-mint-accent-hover) !important;
+}
+
+:root.theme-light .text-sky-400,
+:root.theme-light .text-sky-400\/80 {
+  color: var(--pm-sage-500) !important;
+}
+
+:root.theme-light .floor-label {
+  color: var(--pm-sage-500);
+}
 
 :root.theme-light .floor-card { border-color: rgb(148 163 184 / 0.75) !important; }
 
@@ -55,6 +266,57 @@ body {
   }
   30% {
     background-color: rgb(6 78 59 / 0.35);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #pm-print-area,
+  #pm-print-area * {
+    visibility: visible;
+  }
+  #pm-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0.75rem 1rem;
+  }
+  .pm-action-footer {
+    display: none !important;
+  }
+  main {
+    padding-bottom: 0 !important;
+    overflow: visible !important;
+  }
+  #pm-form .pm-section {
+    border-color: #cbd5e1 !important;
+    background: white !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  #pm-form .pm-section-title {
+    color: #92400e !important;
+    border-color: #e2e8f0 !important;
+  }
+  #pm-form .input-sm,
+  #pm-form select.input-sm {
+    border-color: #cbd5e1 !important;
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  #pm-form span.text-slate-500,
+  #pm-form .text-slate-500 {
+    color: #475569 !important;
   }
 }
 

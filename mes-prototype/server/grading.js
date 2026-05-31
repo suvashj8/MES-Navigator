@@ -1,6 +1,8 @@
 /**
  * Grading formula from reference Sheet5 (bed for life.xlsx)
  */
+import { one } from './db.js';
+
 export function calculateGrade(quantity, standard) {
   if (!standard || quantity == null || quantity < 0) {
     return { grade: null, error: 'Missing standard or quantity' };
@@ -35,14 +37,13 @@ function round(n, d) {
   return Math.round(n * f) / f;
 }
 
-export function findStandard(db, prodCode, costCenterCode, entryDate) {
-  return db
-    .prepare(
-      `SELECT * FROM grading_standards
-       WHERE prod_code = ? AND cost_center_code = ?
-       AND (effective_date IS NULL OR effective_date <= ?)
-       ORDER BY effective_date DESC
-       LIMIT 1`
-    )
-    .get(prodCode, costCenterCode, entryDate || '9999-12-31');
+export async function findStandard(prodCode, costCenterCode, entryDate) {
+  return one(
+    `SELECT * FROM grading_standards
+     WHERE prod_code = ? AND cost_center_code = ?
+     AND (effective_date IS NULL OR effective_date <= ?)
+     ORDER BY effective_date DESC NULLS LAST
+     LIMIT 1`,
+    [prodCode, costCenterCode, entryDate || '9999-12-31']
+  );
 }

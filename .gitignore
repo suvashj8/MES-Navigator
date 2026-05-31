@@ -32,4 +32,8 @@ Thumbs.db
 
 # Local spreadsheets / data dumps
 bed for life.xlsx
+bead for life.xlsx
+
+# PWA dev build output
+mes-prototype/client/dev-dist/
 
