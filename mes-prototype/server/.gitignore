@@ -5,3 +5,4 @@ mes.db.*
 *.sqlite
 *.sqlite3
 postgres-migration-manifest.json
+uploads/

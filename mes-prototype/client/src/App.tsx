@@ -1,6 +1,9 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { memo, useEffect, useState } from 'react';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
+import { ConfirmProvider } from './context/ConfirmProvider';
+import { useAuth } from './hooks/useAuth';
+import { useLayoutMode } from './hooks/useLayoutMode';
 import ProtectedRoute from './components/ProtectedRoute';
 import MobileNav from './components/MobileNav';
 import Dashboard from './pages/Dashboard';
@@ -19,6 +22,9 @@ import MissingStandards from './pages/MissingStandards';
 import SyncCenter from './pages/SyncCenter';
 import DeletedEntries from './pages/DeletedEntries';
 import ProductMaster from './pages/ProductMaster';
+import SessionExpiryBanner from './components/SessionExpiryBanner';
+import ErrorBoundary from './components/ErrorBoundary';
+import PageShell from './components/PageShell';
 
 type NavGroup = 'Production' | 'Reports' | 'Setup';
 type NavItem = { to: string; label: string; group: NavGroup; permission?: string; icon: React.ReactNode };
@@ -133,46 +139,56 @@ const MainRoutes = memo(function MainRoutes({
   landing: string;
   role: 'operator' | 'supervisor' | 'admin';
 }) {
-  const { user } = useAuth();
+  const { user, sessionWarning, renewingSession, renewSession } = useAuth();
+  const location = useLocation();
   return (
-    <main className="flex-1 overflow-auto pb-20 md:pb-0">
-      <div className="md:hidden sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur px-4 py-3 flex justify-between items-center print:hidden">
+    <main className="mes-app-main flex-1 overflow-auto pb-20 md:pb-0">
+      {sessionWarning && (
+        <SessionExpiryBanner
+          message={sessionWarning}
+          onRenew={() => renewSession()}
+          renewing={renewingSession}
+        />
+      )}
+      <div className="mes-mobile-header md:hidden sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur px-4 py-3 flex justify-between items-center print:hidden">
         <div>
           <p className="text-xs text-amber-400 font-semibold">Navigator Bead for Life MES</p>
           <p className="text-sm font-medium">{user?.display_name}</p>
         </div>
         <span className="text-[10px] capitalize text-slate-500 bg-slate-800 px-2 py-1 rounded">{role}</span>
       </div>
-      <Routes>
-        <Route path="/" element={<Navigate to={landing} replace />} />
-        <Route path="/dashboard" element={<ProtectedRoute permission="reports:read"><Dashboard /></ProtectedRoute>} />
-        <Route
-          path="/floor"
-          element={
-            <ProtectedRoute permission="daily-grading:write">
-              {role === 'operator' ? <DailyEntry floorMode /> : <Navigate to="/daily-entry" replace />}
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/daily-entry"
-          element={
-            <ProtectedRoute permission="daily-grading:write">
-              {role === 'operator' ? <Navigate to="/floor" replace /> : <DailyEntry />}
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/reports" element={<ProtectedRoute permission="reports:read"><Reports /></ProtectedRoute>} />
-        <Route path="/sync" element={<ProtectedRoute permission="daily-grading:write"><SyncCenter /></ProtectedRoute>} />
-        <Route path="/deleted-entries" element={<ProtectedRoute permission="daily-grading:delete"><DeletedEntries /></ProtectedRoute>} />
-        <Route path="/standards" element={<ProtectedRoute permission="standards:read"><Standards /></ProtectedRoute>} />
-        <Route path="/missing-standards" element={<ProtectedRoute permission="standards:read"><MissingStandards /></ProtectedRoute>} />
-        <Route path="/activity-mapping" element={<ProtectedRoute permission="activity-mapping:write"><ActivityMapping /></ProtectedRoute>} />
-        <Route path="/product-master" element={<ProtectedRoute permission="reports:read"><ProductMaster /></ProtectedRoute>} />
-        <Route path="/staff" element={<ProtectedRoute permission="reports:read"><StaffMaster /></ProtectedRoute>} />
-        <Route path="/users" element={<ProtectedRoute permission="users:manage"><Users /></ProtectedRoute>} />
-        <Route path="/profile" element={<Profile />} />
-      </Routes>
+      <ErrorBoundary resetKey={location.pathname} title="This page could not be loaded" homeTo={landing} homeLabel="Go home">
+        <Routes>
+          <Route path="/" element={<Navigate to={landing} replace />} />
+          <Route path="/dashboard" element={<ProtectedRoute permission="reports:read"><Dashboard /></ProtectedRoute>} />
+          <Route
+            path="/floor"
+            element={
+              <ProtectedRoute permission="daily-grading:write">
+                {role === 'operator' ? <DailyEntry floorMode /> : <Navigate to="/daily-entry" replace />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/daily-entry"
+            element={
+              <ProtectedRoute permission="daily-grading:write">
+                {role === 'operator' ? <Navigate to="/floor" replace /> : <DailyEntry />}
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/reports" element={<ProtectedRoute permission="reports:read"><Reports /></ProtectedRoute>} />
+          <Route path="/sync" element={<ProtectedRoute permission="daily-grading:write"><SyncCenter /></ProtectedRoute>} />
+          <Route path="/deleted-entries" element={<ProtectedRoute permission="daily-grading:delete"><DeletedEntries /></ProtectedRoute>} />
+          <Route path="/standards" element={<ProtectedRoute permission="standards:read"><Standards /></ProtectedRoute>} />
+          <Route path="/missing-standards" element={<ProtectedRoute permission="standards:read"><MissingStandards /></ProtectedRoute>} />
+          <Route path="/activity-mapping" element={<ProtectedRoute permission="activity-mapping:write"><ActivityMapping /></ProtectedRoute>} />
+          <Route path="/product-master" element={<ProtectedRoute permission="reports:read"><ProductMaster /></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute permission="reports:read"><StaffMaster /></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute permission="users:manage"><Users /></ProtectedRoute>} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </ErrorBoundary>
       <MobileNav />
     </main>
   );
@@ -181,6 +197,7 @@ const MainRoutes = memo(function MainRoutes({
 function AppLayout() {
   const { user, loading, logout, can } = useAuth();
   const { theme, toggle } = useTheme();
+  const layoutMode = useLayoutMode();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [paletteInitial, setPaletteInitial] = useState('');
@@ -222,8 +239,8 @@ function AppLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950">
-        <div className="p-8 max-w-6xl mx-auto">
+      <div className="mes-app-shell min-h-screen bg-slate-950">
+        <PageShell>
           <div className="flex items-center gap-3 text-slate-300">
             <Spinner className="h-5 w-5 text-amber-300" />
             <span className="text-sm">Loading your workspace…</span>
@@ -234,7 +251,7 @@ function AppLayout() {
             ))}
           </div>
           <div className="mt-6 h-40 rounded-xl bg-slate-900 border border-slate-800 animate-pulse" />
-        </div>
+        </PageShell>
       </div>
     );
   }
@@ -266,7 +283,10 @@ function AppLayout() {
         : (can('reports:read') ? '/dashboard' : '/daily-entry');
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div
+      className="mes-app-shell min-h-screen flex flex-col md:flex-row"
+      data-layout={layoutMode}
+    >
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
@@ -274,7 +294,7 @@ function AppLayout() {
         navActions={navActions}
       />
       <aside
-        className={`hidden md:flex shrink-0 border-r border-slate-800 bg-slate-900/80 flex-col gap-6 print:hidden ${
+        className={`mes-app-sidebar hidden md:flex shrink-0 border-r border-slate-800 bg-slate-900/80 flex-col gap-6 print:hidden ${
           sidebarCollapsed ? 'w-[4.25rem] px-3 py-5' : 'w-64 p-5'
         }`}
       >
@@ -283,13 +303,13 @@ function AppLayout() {
             <p className="text-xs uppercase tracking-widest text-amber-400 font-semibold">MES</p>
             {!sidebarCollapsed && (
               <>
-                <h1 className="text-lg font-bold mt-1 leading-tight">Navigator Bead for Life MES</h1>
-                <p className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                <h1 className="text-lg font-bold mt-1 leading-tight text-amber-400">Navigator Bead for Life MES</h1>
+                <p className="text-xs text-amber-400/80 mt-1 flex items-center gap-2">
                   <span>Worker Performance &amp; Grading</span>
                   <button
                     type="button"
                     onClick={toggleSidebar}
-                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-slate-700/50 text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-amber-500/40 text-amber-400/90 hover:text-amber-300 hover:bg-slate-800"
                     title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                     aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                   >
@@ -376,12 +396,23 @@ function AppLayout() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/*" element={<AppLayout />} />
-        </Routes>
-      </AuthProvider>
+      <ErrorBoundary title="Application error" homeTo="/login" homeLabel="Back to sign in">
+        <AuthProvider>
+          <ConfirmProvider>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <ErrorBoundary resetKey="login" title="Sign-in error" homeTo="/login" homeLabel="Try again">
+                    <Login />
+                  </ErrorBoundary>
+                }
+              />
+              <Route path="/*" element={<AppLayout />} />
+            </Routes>
+          </ConfirmProvider>
+        </AuthProvider>
+      </ErrorBoundary>
     </ThemeProvider>
   );
 }

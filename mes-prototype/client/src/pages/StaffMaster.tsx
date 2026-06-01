@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type Staff } from '../api';
-import { useAuth } from '../context/AuthContext';
+import PageShell from '../components/PageShell';
+import { useAuth } from '../hooks/useAuth';
+import { useConfirm } from '../hooks/useConfirm';
 import { blockNegativeNumberKey, sanitizeNonNegativeIntegerInput } from '../utils/numericInput';
 import { blockPersonNameKey, isValidPersonName, sanitizePersonNameInput } from '../utils/textInput';
 
@@ -8,6 +10,7 @@ const PAGE_SIZE = 10;
 
 export default function StaffMaster() {
   const { can } = useAuth();
+  const confirm = useConfirm();
   const canWrite = can('staff:write');
   const [staff, setStaff] = useState<Staff[]>([]);
   const [department, setDepartment] = useState('');
@@ -18,7 +21,8 @@ export default function StaffMaster() {
   const [regNo, setRegNo] = useState('');
   const [name, setName] = useState('');
   const [newDept, setNewDept] = useState('Production');
-  const [photoData, setPhotoData] = useState<string>('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<number | null>(null);
   const [page, setPage] = useState(0);
@@ -77,16 +81,16 @@ export default function StaffMaster() {
         setError('Name must use letters only (no numbers or minus signs)');
         return;
       }
-      await api.createStaff({
-        reg_no: reg,
-        name: trimmedName,
-        department: newDept,
-        photo_data: photoData || null,
-      });
+      await api.createStaff(
+        { reg_no: reg, name: trimmedName, department: newDept },
+        photoFile
+      );
       setShowAdd(false);
       setRegNo('');
       setName('');
-      setPhotoData('');
+      setPhotoFile(null);
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+      setPhotoPreview(null);
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add staff');
@@ -94,9 +98,12 @@ export default function StaffMaster() {
   }
 
   async function handleFire(s: Staff) {
-    const ok = confirm(
-      `Fire ${s.name} (Reg #${s.reg_no})?\n\nThey will be removed from daily entry and worker lists. Past grading records are kept.`
-    );
+    const ok = await confirm({
+      title: 'Fire worker',
+      message: `Fire ${s.name} (Reg #${s.reg_no})?\n\nThey will be removed from daily entry and worker lists. Past grading records are kept.`,
+      confirmLabel: 'Fire',
+      variant: 'danger',
+    });
     if (!ok) return;
     setError('');
     setBusyId(s.id);
@@ -111,7 +118,11 @@ export default function StaffMaster() {
   }
 
   async function handleRehire(s: Staff) {
-    const ok = confirm(`Rehire ${s.name} (Reg #${s.reg_no})? They will appear in daily entry again.`);
+    const ok = await confirm({
+      title: 'Rehire worker',
+      message: `Rehire ${s.name} (Reg #${s.reg_no})? They will appear in daily entry again.`,
+      confirmLabel: 'Rehire',
+    });
     if (!ok) return;
     setError('');
     setBusyId(s.id);
@@ -125,9 +136,11 @@ export default function StaffMaster() {
     }
   }
 
-  async function onPickPhoto(file: File | null) {
+  function onPickPhoto(file: File | null) {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
     if (!file) {
-      setPhotoData('');
+      setPhotoFile(null);
+      setPhotoPreview(null);
       return;
     }
     if (!file.type.startsWith('image/')) {
@@ -138,14 +151,9 @@ export default function StaffMaster() {
       setError('Image is too large. Please use a smaller photo (under 700 KB).');
       return;
     }
-    const reader = new FileReader();
-    const data: string = await new Promise((resolve, reject) => {
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Failed to read image'));
-      reader.readAsDataURL(file);
-    });
     setError('');
-    setPhotoData(data);
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   }
 
   const byDept = activeStaff.reduce<Record<string, Staff[]>>((acc, s) => {
@@ -154,7 +162,7 @@ export default function StaffMaster() {
   }, {});
 
   return (
-    <div className="p-8 max-w-6xl">
+    <PageShell>
       <header className="flex justify-between items-end mb-8 gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-bold">Staff Master</h2>
@@ -360,8 +368,8 @@ export default function StaffMaster() {
 
             <div className="flex items-center gap-3">
               <div className="h-14 w-14 rounded-xl border border-slate-700 bg-slate-800 overflow-hidden flex items-center justify-center shrink-0">
-                {photoData ? (
-                  <img src={photoData} alt="Staff photo preview" className="h-full w-full object-cover" />
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Staff photo preview" className="h-full w-full object-cover" />
                 ) : (
                   <span className="text-xs text-slate-500">Photo</span>
                 )}
@@ -374,10 +382,10 @@ export default function StaffMaster() {
                   onChange={(e) => onPickPhoto(e.target.files?.[0] || null)}
                   className="w-full text-xs text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200 hover:file:bg-slate-700"
                 />
-                {photoData && (
+                {photoFile && (
                   <button
                     type="button"
-                    onClick={() => setPhotoData('')}
+                    onClick={() => onPickPhoto(null)}
                     className="mt-2 text-xs text-slate-400 hover:text-slate-200"
                   >
                     Remove photo
@@ -402,6 +410,6 @@ export default function StaffMaster() {
           </form>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

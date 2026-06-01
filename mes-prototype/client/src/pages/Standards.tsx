@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { api, type GradingStandard, type ProductMasterListRow, type StandardInput, type CostCenter } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { useConfirm } from '../hooks/useConfirm';
+import PageShell from '../components/PageShell';
 import {
   blockNegativeNumberKey,
   parseNonNegativeNumber,
@@ -26,6 +28,7 @@ const PAGE_SIZE = 10;
 
 export default function Standards() {
   const { can } = useAuth();
+  const confirm = useConfirm();
   const canWrite = can('standards:write');
   const location = useLocation();
   const [standards, setStandards] = useState<GradingStandard[]>([]);
@@ -63,14 +66,13 @@ export default function Standards() {
   useEffect(() => {
     const sp = new URLSearchParams(location.search);
     const qParam = sp.get('q');
-    if (qParam && qParam !== q) setQ(qParam);
+    if (qParam) setQ(qParam);
     const codeParam = sp.get('prod_code');
     if (codeParam && canWrite) {
       setForm((f) => ({ ...f, prod_code: codeParam }));
       setModal('add');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]);
+  }, [location.search, canWrite]);
 
   useEffect(() => {
     load();
@@ -297,7 +299,13 @@ export default function Standards() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Delete this grading standard?')) return;
+    const ok = await confirm({
+      title: 'Delete grading rule',
+      message: 'Delete this grading standard?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await api.deleteStandard(id);
     load();
   }
@@ -335,7 +343,7 @@ export default function Standards() {
   const noRuleCount = productsWithoutRules.length;
 
   return (
-    <div className="p-8 max-w-6xl">
+    <PageShell>
       <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">Grading rules</h2>
@@ -360,7 +368,7 @@ export default function Standards() {
       </header>
 
       {masterProducts.length === 0 && (
-        <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+        <div className="mes-notice-amber mb-4 rounded-lg px-4 py-3 text-sm">
           No products in Product Master yet.{' '}
           <Link to="/product-master" className="font-semibold underline">
             Add products first
@@ -370,7 +378,7 @@ export default function Standards() {
       )}
 
       {noRuleCount > 0 && !showUnlinkedOnly && showProductsWithoutRules && (
-        <div className="mb-4 rounded-lg border border-sky-500/30 bg-sky-500/10 px-4 py-3 text-sm text-sky-100">
+        <div className="mes-notice-sky mb-4 rounded-lg px-4 py-3 text-sm">
           {noRuleCount} product(s) from Product Master do not have a grading rule yet. They appear below
           as <span className="font-semibold">No rule yet</span> — use <span className="font-semibold">Add rule</span>{' '}
           to set work station and C/B/A/A+ thresholds.
@@ -378,7 +386,7 @@ export default function Standards() {
       )}
 
       {unlinkedCount > 0 && (
-        <div className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-100 space-y-3">
+        <div className="mes-notice-rose mb-4 rounded-lg px-4 py-3 text-sm space-y-3">
           <p>
             {unlinkedCount} rule(s) use a product code that is not in Product Master. Link them by creating
             missing products from the rule codes, or edit each rule and re-select the product.
@@ -425,7 +433,7 @@ export default function Standards() {
       )}
 
       {linkMessage && (
-        <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+        <div className="mes-notice-emerald mb-4 rounded-lg px-4 py-3 text-sm">
           {linkMessage}
         </div>
       )}
@@ -434,7 +442,7 @@ export default function Standards() {
         placeholder="Search product code, name, or work station..."
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-6"
+        className="w-full max-w-md xl:max-w-xl bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-6"
       />
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
@@ -478,7 +486,7 @@ export default function Standards() {
                 <tr key={`rule-${row.rule.id}`} className="border-t border-slate-800 hover:bg-slate-900/40">
                   <td className="p-2 align-top">
                     <p className="text-[10px] uppercase tracking-wide text-slate-600 mb-0.5">Code</p>
-                    <span className="font-mono text-amber-200/90">{row.rule.prod_code}</span>
+                    <span className="mes-prod-code text-amber-200/90">{row.rule.prod_code}</span>
                     {!row.rule.in_product_master && (
                       <span className="ml-1 text-[10px] uppercase text-rose-400 font-semibold">Unlinked</span>
                     )}
@@ -526,7 +534,7 @@ export default function Standards() {
                 >
                   <td className="p-2 align-top">
                     <p className="text-[10px] uppercase tracking-wide text-slate-600 mb-0.5">Code</p>
-                    <span className="font-mono text-amber-200/90">{row.product.code}</span>
+                    <span className="mes-prod-code text-amber-200/90">{row.product.code}</span>
                     <span className="ml-1 text-[10px] uppercase text-sky-400 font-semibold">No rule yet</span>
                     <p className="text-[10px] uppercase tracking-wide text-slate-600 mt-1.5 mb-0.5">Description</p>
                     <p className="text-slate-300 truncate">{row.product.description}</p>
@@ -732,7 +740,7 @@ export default function Standards() {
           </form>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

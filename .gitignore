@@ -19,12 +19,12 @@ Thumbs.db
 .env
 .env.*
 
-# SQLite DB (prototype data)
+# Legacy SQLite (app uses PostgreSQL only — remove with server npm run cleanup:legacy-sqlite)
 **/mes.db
-**/*.db
+**/mes.db-wal
+**/mes.db-shm
+**/mes.db.migrated.*
 **/*.db-journal
-**/*.db-wal
-**/*.db-shm
 
 # Local exports
 **/*.csv

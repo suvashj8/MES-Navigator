@@ -9,7 +9,7 @@ import type {
   ProductMasterSaveInput,
   VatCategory,
 } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Spinner from '../components/Spinner';
 import {
   asNonNegativeNumberOrUndef,
@@ -381,6 +381,9 @@ export default function ProductMasterPage() {
     [product.vat_category]
   );
 
+  const loadListRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const loadDetailRef = useRef<(id: number) => Promise<void>>(() => Promise.resolve());
+
   function resetToAdd() {
     setSelectedId(null);
     setProduct(emptyProduct);
@@ -412,7 +415,7 @@ export default function ProductMasterPage() {
       setList(rows);
       setTotal(r.total);
       if (needle && r.total === 1 && rows.length === 1 && selectedId !== rows[0].id) {
-        await loadDetail(rows[0].id);
+        await loadDetailRef.current(rows[0].id);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load list');
@@ -492,9 +495,11 @@ export default function ProductMasterPage() {
     }
   }
 
+  loadListRef.current = loadList;
+  loadDetailRef.current = loadDetail;
+
   useEffect(() => {
-    loadList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadListRef.current();
   }, []);
 
   useEffect(() => {
@@ -506,7 +511,7 @@ export default function ProductMasterPage() {
         if (cancelled) return;
         const match = r.rows.find((p) => p.code === deepLinkCode) ?? r.rows[0];
         if (match) {
-          await loadDetail(match.id);
+          await loadDetailRef.current(match.id);
         } else {
           setError(`Product "${deepLinkCode}" not found in Product Master.`);
         }
@@ -517,13 +522,11 @@ export default function ProductMasterPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLinkCode]);
 
   useEffect(() => {
-    const t = setTimeout(loadList, 250);
+    const t = setTimeout(() => void loadListRef.current(), 250);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   async function saveAll() {
@@ -653,7 +656,7 @@ export default function ProductMasterPage() {
   }
 
   return (
-    <div className="flex flex-col w-full min-h-0 px-2 py-1 pb-28 md:pb-16 print:p-0 print:pb-0">
+    <div className="mes-page flex flex-col w-full min-h-0 max-w-[96rem] mx-auto px-2 md:px-4 py-1 pb-28 md:pb-16 print:p-0 print:pb-0">
       <div className="sticky top-0 z-30 shrink-0 border-b border-slate-800 bg-slate-950 px-2 py-1.5">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
@@ -1263,7 +1266,7 @@ export default function ProductMasterPage() {
       </div>
 
       <div className="pm-action-footer fixed inset-x-0 bottom-20 md:bottom-0 z-40 border-t border-slate-800 bg-slate-950/98 backdrop-blur px-3 py-2.5 safe-pb">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+        <div className="w-full flex items-center justify-between gap-2">
           <button
             className={`${btnSm} border-slate-600`}
             type="button"

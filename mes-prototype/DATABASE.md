@@ -2,6 +2,19 @@
 
 This project **does not use SQLite** at runtime. All API, seed, and import scripts talk to **PostgreSQL** via `pg` (`server/db.js`).
 
+On startup the server logs `Database: PostgreSQL — …`. If a code review flags `mes.db-wal`, that is a **leftover file on disk**, not the live database — remove it with `cd server && npm run cleanup:legacy-sqlite` after migration.
+
+## Staff photos
+
+Photos are stored as files under `server/uploads/staff/` (gitignored). The database keeps only `photo_path`. List APIs never return base64 blobs. Serve via `GET /api/staff/:id/photo` (authenticated).
+
+To move existing `photo_data` from Postgres to disk once:
+
+```bash
+cd server
+npm run migrate:staff-photos
+```
+
 | Item | Location |
 |------|----------|
 | Connection | `server/.env` — `DATABASE_URL` or `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` |

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, type StandardProduct, type Staff } from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 type NavAction = { id: string; label: string; hint?: string; to: string };
 
@@ -35,26 +35,6 @@ export default function CommandPalette({ open, onClose, initialQuery = '', navAc
     const t = setTimeout(() => inputRef.current?.focus(), 0);
     return () => clearTimeout(t);
   }, [open, initialQuery]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex((i) => i + 1); }
-      if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex((i) => Math.max(0, i - 1)); }
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const r = results[clampedIndex];
-        if (r) {
-          navigate(r.to);
-          onClose();
-        }
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activeIndex, q]);
 
   useEffect(() => {
     if (!open) return;
@@ -104,6 +84,31 @@ export default function CommandPalette({ open, onClose, initialQuery = '', navAc
   }, [q, navActions, staff, products, user?.role]);
 
   const clampedIndex = Math.min(Math.max(0, activeIndex), Math.max(0, results.length - 1));
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex((i) => i + 1);
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex((i) => Math.max(0, i - 1));
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const r = results[clampedIndex];
+        if (r) {
+          navigate(r.to);
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, results, clampedIndex, navigate, onClose]);
 
   if (!open) return null;
 

@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api, type Staff } from '../api';
+import PageShell from '../components/PageShell';
 import Toast from '../components/Toast';
 import { loadOfflineQueue, offlineQueueKey, saveOfflineQueue, syncOfflineQueue, type OfflineQueueItem } from '../offlineQueue';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { useConfirm } from '../hooks/useConfirm';
 
 export default function SyncCenter() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const key = useMemo(() => offlineQueueKey(user?.username), [user?.username]);
   const [items, setItems] = useState<OfflineQueueItem[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
@@ -48,15 +51,21 @@ export default function SyncCenter() {
     setItems(next);
   }
 
-  function clearAll() {
-    if (!confirm('Clear all queued offline entries?')) return;
+  async function clearAll() {
+    const ok = await confirm({
+      title: 'Clear offline queue',
+      message: 'Clear all queued offline entries?',
+      confirmLabel: 'Clear all',
+      variant: 'danger',
+    });
+    if (!ok) return;
     saveOfflineQueue(key, []);
     setItems([]);
     setToast('Cleared offline queue');
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl">
+    <PageShell>
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} durationMs={2500} />}
 
       <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
@@ -149,7 +158,7 @@ export default function SyncCenter() {
           </table>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

@@ -11,7 +11,7 @@ export default function DepartmentBanner() {
   if (!scope?.locked || !scope.department) return null;
 
   return (
-    <div className="mb-4 px-4 py-2 rounded-lg bg-sky-500/10 border border-sky-500/30 text-sm text-sky-200">
+    <div className="mes-notice-sky mb-4 px-4 py-2 rounded-lg text-sm">
       Viewing data for department: <strong>{scope.department}</strong> (supervisor scope)
     </div>
   );

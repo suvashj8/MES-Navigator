@@ -4,9 +4,11 @@ import { api, type Dashboard as DashboardData } from '../api';
 import GradeBadge from '../components/GradeBadge';
 import DateInput from '../components/DateInput';
 import DepartmentBanner from '../components/DepartmentBanner';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { loadOfflineQueue, offlineQueueKey, syncOfflineQueue } from '../offlineQueue';
 import Toast from '../components/Toast';
+import DashboardSkeleton from '../components/skeleton/DashboardSkeleton';
+import PageShell from '../components/PageShell';
 
 export default function Dashboard() {
   const { user, can } = useAuth();
@@ -56,12 +58,8 @@ export default function Dashboard() {
   const gradeMap = Object.fromEntries((data?.gradeDist || []).map((g) => [g.grade, g.count]));
   const maxTrend = Math.max(1, ...(data?.trend.days.map((d) => d.total) || [1]));
 
-  function SkeletonCard() {
-    return <div className="h-24 bg-slate-900 border border-slate-800 rounded-xl animate-pulse" />;
-  }
-
   return (
-    <div className="p-8 max-w-6xl">
+    <PageShell>
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} durationMs={2400} />}
       <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
@@ -74,7 +72,7 @@ export default function Dashboard() {
               </span>
             )}
           </p>
-          <div className="mt-4 flex items-center gap-2 w-full max-w-xl">
+          <div className="mt-4 flex items-center gap-2 w-full max-w-xl xl:max-w-2xl">
             <input
               value={dashSearch}
               onChange={(e) => setDashSearch(e.target.value)}
@@ -121,7 +119,7 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-        <div className="w-56">
+        <div className="w-full sm:w-64 shrink-0">
           <DateInput value={date} onChange={setDate} />
         </div>
       </header>
@@ -129,12 +127,12 @@ export default function Dashboard() {
       <DepartmentBanner />
 
       {!loading && data && (data.productsWithoutRulesCount ?? 0) > 0 && (
-        <div className="mb-6 rounded-xl border border-sky-500/35 bg-sky-500/10 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm text-sky-100">
+        <div className="mes-notice-sky mb-6 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm">
             <p className="font-semibold">
               {data.productsWithoutRulesCount} product{data.productsWithoutRulesCount === 1 ? '' : 's'} need a grading rule
             </p>
-            <p className="text-sky-200/80 text-xs mt-1">
+            <p className="mes-notice-muted text-xs mt-1">
               These exist in Product Master ({data.productMasterCount ?? '—'} total) but have no work-station rule yet. Daily
               entry cannot grade them until you add C/B/A/A+ thresholds.
             </p>
@@ -151,37 +149,14 @@ export default function Dashboard() {
       )}
 
       {!loading && data && (data.productsWithoutRulesCount ?? 0) === 0 && (data.productMasterCount ?? 0) > 0 && (
-        <div className="mb-6 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-100">
+        <div className="mes-notice-emerald mb-6 rounded-xl px-4 py-2.5 text-sm">
           All {data.productMasterCount} Product Master item{data.productMasterCount === 1 ? '' : 's'} have at least one
           grading rule ({data.standardsCount} rule{data.standardsCount === 1 ? '' : 's'} total).
         </div>
       )}
 
       {loading ? (
-        <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
-            <SkeletonCard /><SkeletonCard />
-          </div>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6 animate-pulse">
-            <div className="h-4 w-56 bg-slate-800 rounded mb-4" />
-            <div className="h-32 bg-slate-800/60 rounded" />
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 animate-pulse">
-              <div className="h-4 w-48 bg-slate-800 rounded mb-4" />
-              <div className="flex gap-4 flex-wrap">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-12 w-28 bg-slate-800/60 rounded-lg" />
-                ))}
-              </div>
-            </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 animate-pulse">
-              <div className="h-4 w-40 bg-slate-800 rounded mb-4" />
-              <div className="h-36 bg-slate-800/60 rounded" />
-            </div>
-          </div>
-        </>
+        <DashboardSkeleton />
       ) : data ? (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
@@ -201,9 +176,14 @@ export default function Dashboard() {
                 color: (data.productsWithoutRulesCount ?? 0) > 0 ? 'text-sky-300' : 'text-emerald-300',
               },
             ].map((s) => (
-              <div key={s.label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-                <p className="text-xs text-slate-400 uppercase tracking-wide">{s.label}</p>
-                <p className={`text-3xl font-bold mt-2 ${s.color}`}>{s.value}</p>
+              <div
+                key={s.label}
+                className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col min-h-[6.75rem]"
+              >
+                <p className="text-xs text-slate-400 uppercase tracking-wide leading-snug min-h-[2.5rem] flex items-end">
+                  {s.label}
+                </p>
+                <p className={`text-3xl font-bold mt-2 tabular-nums leading-none ${s.color}`}>{s.value}</p>
               </div>
             ))}
           </div>
@@ -349,6 +329,6 @@ export default function Dashboard() {
           </section>
         </>
       ) : null}
-    </div>
+    </PageShell>
   );
 }

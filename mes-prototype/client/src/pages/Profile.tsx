@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api';
-import { useAuth } from '../context/AuthContext';
+import PageShell from '../components/PageShell';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Profile() {
   const { user } = useAuth();
@@ -40,7 +41,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="p-8 max-w-md">
+    <PageShell variant="narrow">
       <header className="mb-8">
         <h2 className="text-2xl font-bold">My Profile</h2>
         <p className="text-slate-400 text-sm mt-1">Update your display name and password</p>
@@ -75,6 +76,6 @@ export default function Profile() {
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
-    </div>
+    </PageShell>
   );
 }

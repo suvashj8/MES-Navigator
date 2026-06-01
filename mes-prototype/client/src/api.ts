@@ -1,48 +1,81 @@
+import {
+  fetchWithGatewayRetry,
+  gatewayErrorMessage,
+} from './apiGateway';
+import {
+  buildGetCacheKey,
+  getCachedGet,
+  invalidateGetCacheForMutation,
+  setCachedGet,
+} from './apiGetCache';
+import {
+  persistAuthSession,
+  redirectToLogin,
+  refreshSessionOnce,
+  type AuthSession,
+} from './authSession';
+
 const BASE = '/api';
 let authToken: string | null = null;
 
-// Small in-memory GET cache to speed up back-to-back navigation.
-const getCache = new Map<string, { ts: number; data: unknown }>();
-const GET_CACHE_TTL_MS = 10_000;
+type RequestOpts = RequestInit & { _authRetry?: boolean };
 
 export function setAuthToken(token: string | null) {
   authToken = token;
 }
 
-async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+export function getAuthToken() {
+  return authToken;
+}
+
+async function request<T>(path: string, options?: RequestOpts): Promise<T> {
+  const isFormData = typeof FormData !== 'undefined' && options?.body instanceof FormData;
+  const headers: Record<string, string> = {};
+  if (!isFormData) headers['Content-Type'] = 'application/json';
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
   const method = (options?.method || 'GET').toUpperCase();
   const isCacheableGet = method === 'GET' && !options?.body;
-  const cacheKey = isCacheableGet ? `${authToken || 'anon'}::${path}` : '';
+  const cacheKey = isCacheableGet ? buildGetCacheKey(authToken, path) : '';
   if (isCacheableGet) {
-    const hit = getCache.get(cacheKey);
-    if (hit && Date.now() - hit.ts < GET_CACHE_TTL_MS) return hit.data as T;
+    const hit = getCachedGet<T>(cacheKey);
+    if (hit !== undefined) return hit;
   } else {
-    // Any mutation invalidates cached GETs.
-    getCache.clear();
+    invalidateGetCacheForMutation(path);
   }
 
-  const res = await fetch(`${BASE}${path}`, { ...options, headers: { ...headers, ...options?.headers } });
+  const res = await fetchWithGatewayRetry(`${BASE}${path}`, {
+    ...options,
+    headers: { ...headers, ...options?.headers },
+  });
   if (res.status === 401) {
-    localStorage.removeItem('mes_token');
+    const isAuthRoute = path.startsWith('/auth/login') || path.startsWith('/auth/refresh');
+    if (!isAuthRoute && !options?._authRetry) {
+      const session = await refreshSessionOnce();
+      if (session) {
+        persistAuthSession(session);
+        setAuthToken(session.token);
+        window.dispatchEvent(new CustomEvent('mes:session-refreshed', { detail: session }));
+        return request<T>(path, { ...options, _authRetry: true });
+      }
+    }
+    redirectToLogin('Your session expired. Please sign in again.');
     setAuthToken(null);
-    window.location.href = '/login';
     throw new Error('Session expired');
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+    const msg = err.error || gatewayErrorMessage(res.status, res.statusText);
+    throw new Error(msg);
   }
   const json = await res.json();
-  if (isCacheableGet) getCache.set(cacheKey, { ts: Date.now(), data: json });
+  if (isCacheableGet) setCachedGet(cacheKey, json);
   return json;
 }
 
 export const api = {
   login: (username: string, password: string) =>
-    request<{ token: string; user: User }>('/auth/login', {
+    request<AuthSession>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ username, password }),
     }),
@@ -232,18 +265,26 @@ export const api = {
     if (params.to) q.set('to', params.to);
     if (params.department) q.set('department', params.department);
     if (params.staff_id) q.set('staff_id', String(params.staff_id));
-    const headers: Record<string, string> = {};
-    if (authToken) headers.Authorization = `Bearer ${authToken}`;
-    const res = await fetch(`${BASE}/reports/scorecards/export?${q}`, { headers });
+    const url = `${BASE}/reports/scorecards/export?${q}`;
+    const authHeaders = (): Record<string, string> =>
+      authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    let res = await fetchWithGatewayRetry(url, { headers: authHeaders() });
     if (res.status === 401) {
-      localStorage.removeItem('mes_token');
-      setAuthToken(null);
-      window.location.href = '/login';
-      throw new Error('Session expired');
+      const session = await refreshSessionOnce();
+      if (session) {
+        persistAuthSession(session);
+        setAuthToken(session.token);
+        res = await fetchWithGatewayRetry(url, { headers: authHeaders() });
+      }
+      if (res.status === 401) {
+        redirectToLogin('Your session expired. Please sign in again.');
+        setAuthToken(null);
+        throw new Error('Session expired');
+      }
     }
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new Error(err.error || 'Export failed');
+      throw new Error(err.error || gatewayErrorMessage(res.status, res.statusText) || 'Export failed');
     }
     return res.blob();
   },
@@ -254,8 +295,17 @@ export const api = {
   updateUser: (id: number, body: Partial<UserInput & { is_active?: number }>) =>
     request<AppUser>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
-  createStaff: (body: { reg_no: number; name: string; department: string; photo_data?: string | null }) =>
-    request<Staff>('/staff', { method: 'POST', body: JSON.stringify(body) }),
+  createStaff: (
+    body: { reg_no: number; name: string; department: string },
+    photo?: File | null
+  ) => {
+    const fd = new FormData();
+    fd.append('reg_no', String(body.reg_no));
+    fd.append('name', body.name);
+    fd.append('department', body.department);
+    if (photo) fd.append('photo', photo);
+    return request<Staff>('/staff', { method: 'POST', body: fd });
+  },
   updateStaff: (id: number, body: { is_active: number }) =>
     request<Staff>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
 
@@ -355,7 +405,8 @@ export interface Staff {
   reg_no: number;
   name: string;
   department: string;
-  photo_data?: string | null;
+  has_photo?: boolean;
+  photo_url?: string | null;
   is_active?: number;
 }
 

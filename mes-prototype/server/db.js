@@ -186,10 +186,47 @@ async function linkGradingStandardsProductMasterIds() {
   `);
 }
 
+const LEGACY_SQLITE_FILES = ['mes.db', 'mes.db-wal', 'mes.db-shm'];
+
+/** Warn if old SQLite files remain on disk (ignored by the app; confuses scanners). */
+export function warnIfLegacySqlitePresent() {
+  const found = LEGACY_SQLITE_FILES.filter((name) => fs.existsSync(path.join(__dirname, name)));
+  if (!found.length) return;
+  console.warn(
+    `[legacy] Unused SQLite files still present: ${found.join(', ')}. ` +
+      'The API uses PostgreSQL only. Run: npm run cleanup:legacy-sqlite'
+  );
+}
+
+/** Log which database the server actually connected to. */
+export async function logPostgresIdentity() {
+  const row = await one(
+  `SELECT current_database() AS db_name, current_user AS db_user, version() AS version`
+  );
+  const short = row?.version?.split('\n')[0] ?? 'PostgreSQL';
+  console.log(`Database: PostgreSQL — ${row?.db_name} (user ${row?.db_user}) — ${short}`);
+}
+
+async function ensureStaffPhotoPathColumn() {
+  const col = await one(
+    `
+    SELECT 1 AS ok FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'staff' AND column_name = 'photo_path'
+    `
+  );
+  if (!col) {
+    await pool.query('ALTER TABLE staff ADD COLUMN photo_path TEXT');
+    console.log('Schema: added staff.photo_path for file-based photos');
+  }
+}
+
 export async function initSchema() {
   assertPostgresOnly();
+  warnIfLegacySqlitePresent();
   await pool.query('SELECT 1');
+  await logPostgresIdentity();
   await execSchemaFile();
+  await ensureStaffPhotoPathColumn();
   await syncCostCentersFromStandards();
   await linkGradingStandardsProductMasterIds();
 }

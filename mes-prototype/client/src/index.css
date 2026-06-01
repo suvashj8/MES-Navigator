@@ -4,6 +4,20 @@ body {
   @apply bg-slate-950 text-slate-100 antialiased;
 }
 
+@keyframes skeleton-shimmer {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
 /* --- App component primitives (used across pages) --- */
 .card {
   @apply rounded-2xl border border-slate-800 bg-slate-900/80;
@@ -126,6 +140,9 @@ select.input {
 
 /* --- Light mode: black primary text, sage / pastel mint accents --- */
 :root.theme-light {
+  --mes-sidebar-bg: #0b1120;
+  --mes-main-bg: #ecfdf5;
+
   --pm-text-primary: #0f172a;
   --pm-sage-800: #2f4f44;
   --pm-sage-700: #3d5f52;
@@ -197,13 +214,139 @@ select.input {
 :root.theme-light .bg-slate-900\/80 { background-color: rgb(248 250 252 / 0.92) !important; }
 :root.theme-light .bg-slate-900\/95 { background-color: rgb(248 250 252 / 0.96) !important; }
 :root.theme-light .bg-slate-800 { background-color: rgb(226 232 240) !important; } /* slate-200 */
+:root.theme-light .bg-slate-800\/80 { background-color: rgb(255 255 255) !important; }
 :root.theme-light .bg-slate-800\/50 { background-color: rgb(226 232 240 / 0.7) !important; }
 :root.theme-light .bg-slate-800\/40 { background-color: rgb(226 232 240 / 0.6) !important; }
+
+:root.theme-light .mes-date-field {
+  background-color: rgb(255 255 255) !important;
+  border-color: rgb(148 163 184) !important;
+  color: var(--pm-text-primary) !important;
+}
+:root.theme-light .mes-date-field::placeholder {
+  color: var(--pm-sage-500) !important;
+}
+:root.theme-light .mes-date-bs-label {
+  color: var(--pm-sage-700) !important;
+}
+:root.theme-light .mes-date-bs-hint {
+  color: rgb(180 83 9) !important;
+  font-weight: 600;
+}
+
+/* Bikram Sambat calendar popover */
+.mes-bs-cal-nav {
+  @apply h-7 w-7 rounded-md text-slate-400 hover:bg-slate-800 hover:text-amber-300 text-sm leading-none;
+}
+.mes-bs-cal-day {
+  @apply h-8 rounded-md text-xs text-slate-200 hover:bg-slate-800 hover:text-amber-200;
+}
+.mes-bs-cal-day--selected {
+  @apply bg-amber-500/25 text-amber-200 font-semibold ring-1 ring-amber-500/50;
+}
+.mes-bs-cal-day--empty {
+  @apply pointer-events-none;
+}
+
+:root.theme-light .mes-bs-calendar {
+  background-color: rgb(255 255 255) !important;
+  border-color: rgb(148 163 184) !important;
+  box-shadow: 0 10px 25px rgb(15 23 42 / 0.12);
+}
+:root.theme-light .mes-bs-calendar .text-slate-200 {
+  color: var(--pm-text-primary) !important;
+}
+:root.theme-light .mes-bs-cal-nav {
+  color: var(--pm-sage-600) !important;
+}
+:root.theme-light .mes-bs-cal-nav:hover {
+  background-color: rgb(236 253 245) !important;
+  color: rgb(180 83 9) !important;
+}
+:root.theme-light .mes-bs-cal-day {
+  color: var(--pm-text-primary) !important;
+}
+:root.theme-light .mes-bs-cal-day:hover {
+  background-color: rgb(236 253 245) !important;
+  color: rgb(180 83 9) !important;
+}
+:root.theme-light .mes-bs-cal-day--selected {
+  background-color: rgb(253 230 138 / 0.5) !important;
+  color: rgb(146 64 14) !important;
+  ring-color: rgb(217 119 6 / 0.45);
+}
+
 :root.theme-light .bg-slate-950\/40 { background-color: rgb(248 250 252 / 0.75) !important; }
 :root.theme-light .bg-black\/60 { background-color: rgb(15 23 42 / 0.55) !important; }
 :root.theme-light .bg-black\/70 { background-color: rgb(15 23 42 / 0.6) !important; }
 
+/* Sidebar: must follow .bg-slate-900/80 override above (same specificity, later wins) */
+:root.theme-light aside.mes-app-sidebar {
+  background-color: var(--mes-sidebar-bg) !important;
+  border-color: rgb(30 41 59) !important;
+}
+
+/* Main content pane (right) — light green */
+:root.theme-light main.mes-app-main,
+:root.theme-light .mes-app-shell {
+  background-color: var(--mes-main-bg) !important;
+}
+
+:root.theme-light .mes-mobile-header {
+  background-color: rgb(236 253 245 / 0.95) !important;
+  border-color: rgb(167 243 208) !important;
+}
+
+/* Desktop shell: viewport ≥768px (matches Tailwind md + useLayoutMode) */
+@media (min-width: 768px) {
+  .mes-app-shell[data-layout='desktop'] .mes-app-sidebar {
+    display: flex !important;
+  }
+  .mes-app-shell[data-layout='desktop'] .mes-mobile-header,
+  .mes-app-shell[data-layout='desktop'] .mes-mobile-nav {
+    display: none !important;
+  }
+  .mes-app-shell[data-layout='desktop'] .mes-app-main {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* Legible nav on dark sidebar */
+:root.theme-light .mes-app-sidebar .text-slate-300 {
+  color: rgb(203 213 225) !important;
+}
+:root.theme-light .mes-app-sidebar .text-slate-400,
+:root.theme-light .mes-app-sidebar .text-slate-500 {
+  color: rgb(148 163 184) !important;
+}
+:root.theme-light .mes-app-sidebar .text-slate-100,
+:root.theme-light .mes-app-sidebar .hover\:text-white:hover {
+  color: rgb(248 250 252) !important;
+}
+:root.theme-light .mes-app-sidebar .hover\:bg-slate-800:hover {
+  background-color: rgb(30 41 59) !important;
+}
+:root.theme-light .mes-app-sidebar h1 {
+  color: rgb(251 191 36) !important;
+}
+
+:root.theme-light .mes-app-sidebar .text-amber-400,
+:root.theme-light .mes-app-sidebar .text-amber-300 {
+  color: rgb(251 191 36) !important;
+}
+
+:root.theme-light .mes-app-sidebar .text-amber-400\/80 {
+  color: rgb(251 191 36 / 0.85) !important;
+}
+:root.theme-light .mes-app-sidebar .text-sky-400,
+:root.theme-light .mes-app-sidebar .text-sky-400\/80 {
+  color: rgb(56 189 248) !important;
+}
+
 :root.theme-light .border-slate-800 { border-color: rgb(148 163 184) !important; } /* slate-400 */
+:root.theme-light .mes-app-sidebar.border-slate-800 {
+  border-color: rgb(30 41 59) !important;
+}
 :root.theme-light .border-slate-700 { border-color: rgb(148 163 184) !important; }
 :root.theme-light .border-slate-700\/50 { border-color: rgb(148 163 184 / 0.75) !important; }
 
@@ -228,6 +371,68 @@ select.input {
   color: var(--pm-mint-accent) !important;
 }
 
+/* Faded accent text (dark mode tints) → solid readable colors on light backgrounds */
+:root.theme-light .mes-app-sidebar .text-amber-400\/80 {
+  color: rgb(251 191 36 / 0.85) !important;
+}
+:root.theme-light .text-amber-200\/90 {
+  color: rgb(146 64 14) !important;
+}
+:root.theme-light .text-amber-400\/80 {
+  color: rgb(180 83 9) !important;
+}
+:root.theme-light .text-red-400\/80 {
+  color: rgb(185 28 28) !important;
+}
+:root.theme-light .text-orange-400\/80 {
+  color: rgb(194 65 12) !important;
+}
+:root.theme-light .text-emerald-400\/80 {
+  color: rgb(4 120 87) !important;
+}
+
+.mes-prod-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Grade badges (C/B need stronger text in light mode) */
+.mes-grade-badge {
+  @apply border font-bold;
+}
+.mes-grade-badge--c {
+  @apply bg-red-500/20 text-red-300 border-red-500/40;
+}
+.mes-grade-badge--b {
+  @apply bg-orange-500/20 text-orange-300 border-orange-500/40;
+}
+.mes-grade-badge--a {
+  @apply bg-emerald-500/20 text-emerald-300 border-emerald-500/40;
+}
+.mes-grade-badge--aa {
+  @apply bg-amber-500/20 text-amber-200 border-amber-400/50;
+}
+
+:root.theme-light .mes-grade-badge--c {
+  background-color: rgb(254 226 226) !important;
+  border-color: rgb(252 165 165) !important;
+  color: rgb(153 27 27) !important;
+}
+:root.theme-light .mes-grade-badge--b {
+  background-color: rgb(255 237 213) !important;
+  border-color: rgb(253 186 116) !important;
+  color: rgb(154 52 18) !important;
+}
+:root.theme-light .mes-grade-badge--a {
+  background-color: rgb(209 250 229) !important;
+  border-color: rgb(110 231 183) !important;
+  color: rgb(4 120 87) !important;
+}
+:root.theme-light .mes-grade-badge--aa {
+  background-color: rgb(254 243 199) !important;
+  border-color: rgb(252 211 77) !important;
+  color: rgb(146 64 14) !important;
+}
+
 :root.theme-light .text-amber-700,
 :root.theme-light .text-amber-800 {
   color: var(--pm-mint-accent-hover) !important;
@@ -243,6 +448,90 @@ select.input {
 }
 
 :root.theme-light .floor-card { border-color: rgb(148 163 184 / 0.75) !important; }
+
+/* Notice / callout boxes — dark text on tinted panels in light mode */
+.mes-notice-sky {
+  border: 1px solid rgb(14 165 233 / 0.35);
+  background-color: rgb(14 165 233 / 0.12);
+  color: rgb(224 242 254);
+}
+.mes-notice-sky .mes-notice-muted {
+  color: rgb(186 230 253 / 0.92);
+}
+
+.mes-notice-emerald {
+  border: 1px solid rgb(16 185 129 / 0.3);
+  background-color: rgb(16 185 129 / 0.12);
+  color: rgb(209 250 229);
+}
+.mes-notice-emerald .mes-notice-muted {
+  color: rgb(167 243 208 / 0.95);
+}
+
+.mes-notice-amber {
+  border: 1px solid rgb(245 158 11 / 0.4);
+  background-color: rgb(245 158 11 / 0.12);
+  color: rgb(254 243 199);
+}
+.mes-notice-amber .mes-notice-muted {
+  color: rgb(253 230 138 / 0.95);
+}
+
+.mes-notice-rose {
+  border: 1px solid rgb(244 63 94 / 0.35);
+  background-color: rgb(244 63 94 / 0.12);
+  color: rgb(255 228 230);
+}
+.mes-notice-rose .mes-notice-muted {
+  color: rgb(254 205 211 / 0.95);
+}
+
+:root.theme-light .mes-notice-sky {
+  border-color: rgb(2 132 199 / 0.5) !important;
+  background-color: rgb(224 242 254) !important;
+  color: rgb(12 74 110) !important;
+}
+:root.theme-light .mes-notice-sky .mes-notice-muted {
+  color: rgb(7 89 133) !important;
+}
+:root.theme-light .mes-notice-sky a {
+  color: rgb(3 105 161) !important;
+  font-weight: 600;
+}
+
+:root.theme-light .mes-notice-emerald {
+  border-color: rgb(5 150 105 / 0.45) !important;
+  background-color: rgb(209 250 229) !important;
+  color: rgb(6 78 59) !important;
+}
+:root.theme-light .mes-notice-emerald .mes-notice-muted {
+  color: rgb(4 120 87) !important;
+}
+
+:root.theme-light .mes-notice-amber {
+  border-color: rgb(217 119 6 / 0.45) !important;
+  background-color: rgb(254 243 199) !important;
+  color: rgb(120 53 15) !important;
+}
+:root.theme-light .mes-notice-amber .mes-notice-muted {
+  color: rgb(146 64 14) !important;
+}
+:root.theme-light .mes-notice-amber a {
+  color: rgb(180 83 9) !important;
+  font-weight: 600;
+}
+
+:root.theme-light .mes-notice-rose {
+  border-color: rgb(225 29 72 / 0.4) !important;
+  background-color: rgb(255 228 230) !important;
+  color: rgb(136 19 55) !important;
+}
+:root.theme-light .mes-notice-rose .mes-notice-muted {
+  color: rgb(159 18 57) !important;
+}
+:root.theme-light .mes-notice-rose label {
+  color: rgb(136 19 55) !important;
+}
 
 .safe-pb {
   padding-bottom: env(safe-area-inset-bottom, 0);

@@ -5,6 +5,8 @@ import WorkerDetailModal from '../components/WorkerDetailModal';
 import DepartmentBanner from '../components/DepartmentBanner';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Toast from '../components/Toast';
+import PageShell from '../components/PageShell';
+import ReportsSkeleton from '../components/skeleton/ReportsSkeleton';
 
 export default function Reports() {
   const location = useLocation();
@@ -20,7 +22,7 @@ export default function Reports() {
   const [departments, setDepartments] = useState<string[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [report, setReport] = useState<ScorecardReport | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [detailStaffId, setDetailStaffId] = useState<number | null>(null);
@@ -42,15 +44,15 @@ export default function Reports() {
 
   // Keep URL in sync (shareable)
   useEffect(() => {
-    const sp = new URLSearchParams(location.search);
+    const sp = new URLSearchParams();
     sp.set('period', period);
     if (period !== 'custom') sp.set('anchor', anchor);
-    else sp.delete('anchor');
     if (gradeFilter) sp.set('grade', gradeFilter);
-    else sp.delete('grade');
-    navigate({ search: `?${sp.toString()}` }, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [period, anchor, gradeFilter]);
+    const next = `?${sp.toString()}`;
+    if (location.search !== next) {
+      navigate({ search: next }, { replace: true });
+    }
+  }, [period, anchor, gradeFilter, navigate, location.search]);
 
   useEffect(() => {
     api.departments().then(setDepartments);
@@ -83,7 +85,11 @@ export default function Reports() {
   }
 
   async function loadReport() {
-    if (period === 'custom' && (!dateFrom || !dateTo)) return;
+    if (period === 'custom' && (!dateFrom || !dateTo)) {
+      setLoading(false);
+      setReport(null);
+      return;
+    }
     setLoading(true);
     try {
       const data = await api.scorecards(reportParams());
@@ -137,7 +143,7 @@ export default function Reports() {
   }, [report, gradeFilter]);
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl print:p-4">
+    <PageShell className="print:p-4">
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} durationMs={2400} />}
       <header className="flex flex-wrap items-end justify-between gap-4 mb-8 print:mb-4">
         <div>
@@ -246,7 +252,7 @@ export default function Reports() {
       )}
 
       {loading ? (
-        <p className="text-slate-400">Loading scorecards...</p>
+        <ReportsSkeleton />
       ) : !report?.scorecards.length ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-500">
           No grading entries in this period.
@@ -276,7 +282,7 @@ export default function Reports() {
           onClose={() => setDetailStaffId(null)}
         />
       )}
-    </div>
+    </PageShell>
   );
 }
 

@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { api, type Activity, type ActivityMapping, type CostCenter } from '../api';
+import PageShell from '../components/PageShell';
+import { useConfirm } from '../hooks/useConfirm';
 
 export default function ActivityMappingPage() {
+  const confirm = useConfirm();
   const [mappings, setMappings] = useState<ActivityMapping[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
@@ -42,7 +45,13 @@ export default function ActivityMappingPage() {
   }
 
   async function handleDelete(id: number) {
-    if (!confirm('Remove this mapping?')) return;
+    const ok = await confirm({
+      title: 'Remove mapping',
+      message: 'Remove this mapping?',
+      confirmLabel: 'Remove',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await api.deleteActivityMapping(id);
     load();
   }
@@ -53,7 +62,7 @@ export default function ActivityMappingPage() {
   }));
 
   return (
-    <div className="p-8 max-w-6xl">
+    <PageShell>
       <header className="mb-8">
         <h2 className="text-2xl font-bold">Job type ↔ work station</h2>
         <p className="text-slate-400 text-sm mt-1">
@@ -123,6 +132,6 @@ export default function ActivityMappingPage() {
       <p className="text-xs text-slate-500 mt-6">
         {mappings.length} total mappings · Admin can add/remove · Seeded from job type / work station name patterns
       </p>
-    </div>
+    </PageShell>
   );
 }

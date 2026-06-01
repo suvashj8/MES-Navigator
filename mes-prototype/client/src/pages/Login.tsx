@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import { consumeLoginMessage } from '../authSession';
 
 const DEMO_USERS = [
   { user: 'admin', pass: 'admin123', role: 'Admin' },
@@ -13,6 +14,7 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState(() => consumeLoginMessage());
   const [loading, setLoading] = useState(false);
 
   if (user) return <Navigate to="/" replace />;
@@ -66,6 +68,11 @@ export default function Login() {
               required
             />
           </div>
+          {notice && (
+            <p className="text-amber-200/90 text-sm rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+              {notice}
+            </p>
+          )}
           {error && <p className="text-red-400 text-sm">{error}</p>}
           <button
             type="submit"

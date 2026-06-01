@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import NepaliDatePicker from './NepaliDatePicker';
 
 type Props = {
   label?: string;
@@ -38,26 +39,17 @@ export default function DateInput({
     }).catch(() => setBsDisplay(''));
   }, [value]);
 
-  async function onBsChange(bsVal: string) {
-    const trimmed = bsVal.trim().replace(/^-+/, '');
+  async function applyBs(bsVal: string) {
+    const trimmed = bsVal.trim();
     setBs(trimmed);
-    if (!trimmed || trimmed.length < 8) return;
+    if (!trimmed) return;
     try {
       const r = await api.nepaliDateBs(trimmed);
       onChange(r.ad);
+      setBs(r.bs);
       setBsDisplay(r.bs_display);
     } catch {
       /* invalid bs */
-    }
-  }
-
-  function onBsBlur() {
-    if (!bs) return;
-    // Normalize common keyboard entry: YYYYMMDD -> YYYY-MM-DD
-    const digits = bs.replace(/[^\d]/g, '');
-    if (digits.length === 8) {
-      const normalized = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-      if (normalized !== bs) onBsChange(normalized);
     }
   }
 
@@ -65,7 +57,8 @@ export default function DateInput({
   const rounded = floorMode ? 'rounded-xl' : 'rounded-lg';
   const text = large || floorMode ? 'text-base' : 'text-sm';
   const pad = large || floorMode ? 'px-4' : 'px-3';
-  const inputCls = `w-full ${h} ${rounded} ${pad} ${text} bg-slate-800 border border-slate-700`;
+  const inputCls = `mes-date-field w-full ${h} ${rounded} ${pad} ${text} bg-slate-800 border border-slate-700 text-slate-100 placeholder:text-slate-500`;
+  const bsInputCls = `mes-date-field ${h} bg-slate-800 border border-slate-700 ${rounded} px-2 text-xs text-slate-100 placeholder:text-slate-500`;
   const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-400 uppercase';
   const shouldShowSubtitle = showSubtitle ?? Boolean(floorMode);
   const reserveLine = reserveSubtitleLine ?? shouldShowSubtitle;
@@ -96,19 +89,16 @@ export default function DateInput({
             className={`${inputCls} flex-1 min-w-0`}
             title="Gregorian (AD)"
           />
-          <input
-            type="text"
+          <NepaliDatePicker
             value={bs}
-            onChange={(e) => onBsChange(e.target.value)}
-            onBlur={onBsBlur}
-            className={`${inputCls} flex-1 min-w-0`}
+            onChange={(v) => void applyBs(v)}
+            className="flex-1 min-w-0"
+            inputClassName={`${inputCls} flex-1 min-w-0`}
             placeholder="YYYY-MM-DD (BS)"
-            inputMode="numeric"
-            autoComplete="off"
-            title={bsDisplay || 'Nepali (Bikram Sambat) date (type BS)'}
+            title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
           />
         </div>
-        <p className={`text-[10px] leading-4 h-4 mt-1 truncate ${bsDisplay ? 'text-amber-400/80' : 'invisible'}`}>
+        <p className={`mes-date-bs-hint text-[10px] leading-4 h-4 mt-1 truncate ${bsDisplay ? 'text-amber-400/80' : 'invisible'}`}>
           {bsDisplay || '\u00a0'}
         </p>
       </div>
@@ -118,21 +108,26 @@ export default function DateInput({
   return (
     <div className={className}>
       {label && <label className={`${lblCls} block mb-1.5`}>{label}</label>}
-      <input type="date" value={value} onChange={(e) => onChange(e.target.value)} className={inputCls} />
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="text-[10px] text-slate-500 uppercase">BS</span>
-        <input
-          type="text"
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={inputCls}
+        title="Gregorian (AD)"
+      />
+      <div className="mt-2">
+        <span className="mes-date-bs-label text-[10px] font-semibold text-slate-400 uppercase tracking-wide">BS</span>
+        <NepaliDatePicker
           value={bs}
-          onChange={(e) => onBsChange(e.target.value)}
-          onBlur={onBsBlur}
-          className={`${h} bg-slate-800/80 border border-slate-700 ${rounded} px-2 text-xs`}
+          onChange={(v) => void applyBs(v)}
+          className="mt-1"
+          inputClassName={bsInputCls}
           placeholder="YYYY-MM-DD"
-          inputMode="numeric"
-          autoComplete="off"
-          title="Nepali (Bikram Sambat) date (type BS)"
+          title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
         />
-        {bsDisplay && <span className="text-xs text-amber-400/80">{bsDisplay}</span>}
+        {bsDisplay && (
+          <p className="mes-date-bs-hint text-xs font-medium text-amber-400/80 mt-1">{bsDisplay}</p>
+        )}
       </div>
     </div>
   );

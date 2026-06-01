@@ -1,8 +1,8 @@
-const colors: Record<string, string> = {
-  C: 'bg-red-500/20 text-red-300 border-red-500/40',
-  B: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-  A: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  AA: 'bg-amber-500/20 text-amber-200 border-amber-400/50',
+const gradeClass: Record<string, string> = {
+  C: 'mes-grade-badge mes-grade-badge--c',
+  B: 'mes-grade-badge mes-grade-badge--b',
+  A: 'mes-grade-badge mes-grade-badge--a',
+  AA: 'mes-grade-badge mes-grade-badge--aa',
 };
 
 type Props = { grade: string; size?: 'sm' | 'md' | 'lg'; className?: string };
@@ -17,7 +17,7 @@ export default function GradeBadge({ grade, size = 'md', className = '' }: Props
 
   return (
     <span
-      className={`inline-flex items-center justify-center border font-bold ${sizeCls} ${colors[grade] || 'bg-slate-700 text-slate-300'} ${className}`}
+      className={`inline-flex items-center justify-center border font-bold ${sizeCls} ${gradeClass[grade] || 'bg-slate-700 text-slate-300'} ${className}`}
     >
       {grade}
     </span>

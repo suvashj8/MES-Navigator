@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS staff (
   reg_no INTEGER UNIQUE NOT NULL,
   name TEXT NOT NULL,
   department TEXT NOT NULL,
+  photo_path TEXT,
   photo_data TEXT,
   is_active INTEGER DEFAULT 1
 );

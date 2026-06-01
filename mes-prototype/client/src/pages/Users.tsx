@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, type AppUser, type UserInput } from '../api';
+import PageShell from '../components/PageShell';
 
 const DEPTS = ['Production', 'Finishing', 'Packing', 'Quality Checker', 'Incharge', 'Sampling'];
 
@@ -59,7 +60,7 @@ export default function Users() {
   }
 
   return (
-    <div className="p-8 max-w-4xl">
+    <PageShell>
       <header className="flex justify-between items-end mb-8">
         <div>
           <h2 className="text-2xl font-bold">User Management</h2>
@@ -157,7 +158,7 @@ export default function Users() {
           </form>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

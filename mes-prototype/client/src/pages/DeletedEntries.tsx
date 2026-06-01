@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, type DailyGradingAuditRow, type DeletedDailyEntry } from '../api';
 import DepartmentBanner from '../components/DepartmentBanner';
+import PageShell from '../components/PageShell';
 import Toast from '../components/Toast';
-import { useAuth } from '../context/AuthContext';
+import TableSkeleton from '../components/skeleton/TableSkeleton';
+import { useAuth } from '../hooks/useAuth';
+import { useConfirm } from '../hooks/useConfirm';
 
 export default function DeletedEntries() {
   const { can } = useAuth();
+  const confirm = useConfirm();
   const [rows, setRows] = useState<DeletedDailyEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [limit, setLimit] = useState(50);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [auditOpenFor, setAuditOpenFor] = useState<number | null>(null);
@@ -22,7 +26,7 @@ export default function DeletedEntries() {
   const showingFrom = useMemo(() => (total === 0 ? 0 : offset + 1), [offset, total]);
   const showingTo = useMemo(() => Math.min(total, offset + rows.length), [offset, rows.length, total]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const r = await api.deletedDailyGrading({ offset, limit, q: q.trim() || undefined });
@@ -37,21 +41,19 @@ export default function DeletedEntries() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [offset, limit, q]);
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [offset, limit]);
+    void load();
+  }, [load]);
 
   useEffect(() => {
     const t = setTimeout(() => {
       setOffset(0);
-      load();
+      void load();
     }, 250);
     return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q]);
+  }, [q, load]);
 
   async function restore(id: number) {
     await api.restoreDailyGrading(id);
@@ -60,7 +62,13 @@ export default function DeletedEntries() {
   }
 
   async function hardDelete(id: number) {
-    if (!confirm('Permanently delete this entry? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Permanent delete',
+      message: 'Permanently delete this entry? This cannot be undone.',
+      confirmLabel: 'Delete forever',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await api.hardDeleteDailyGrading(id);
     setToast('Permanently deleted');
     load();
@@ -94,7 +102,7 @@ export default function DeletedEntries() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl">
+    <PageShell>
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} durationMs={2500} />}
 
       <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
@@ -143,13 +151,13 @@ export default function DeletedEntries() {
       </div>
 
       {loading ? (
-        <p className="text-slate-400 text-sm">Loading…</p>
+        <TableSkeleton columns={10} rows={8} label="Loading deleted entries" />
       ) : rows.length === 0 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center text-slate-500">
           No deleted entries.
         </div>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px] 2xl:grid-cols-[1fr_440px]">
           <div className="overflow-x-auto rounded-xl border border-slate-800">
             <table className="w-full text-sm">
               <thead className="bg-slate-900 text-slate-400 text-left">
@@ -274,7 +282,7 @@ export default function DeletedEntries() {
           </aside>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

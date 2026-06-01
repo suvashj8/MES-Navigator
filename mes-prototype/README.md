@@ -84,6 +84,17 @@ npm run dev
 
 `npm run db:setup` creates the `mes_prototype` database and applies `server/schema.sql`. On startup, the API also runs `initSchema()` (idempotent).
 
+**Dev scripts**
+
+| Command | Use when |
+|---------|----------|
+| `npm run dev` | UI + API together (default) |
+| `npm run dev:ui` | Frontend only — API already running in another terminal |
+| `npm run dev:api` | API with selective reload (ignores `scripts/`, uploads) |
+| `cd server && npm run dev:stable` | API with **no** auto-restart while you edit the UI |
+
+If login shows “API is restarting”, wait until the API terminal prints `MES API running on http://localhost:3001` and try again (the client auto-retries once after 2s).
+
 - **UI:** http://localhost:5173  
 - **API:** http://localhost:3001  
 
@@ -114,7 +125,8 @@ Copy `server/.env.example` to `server/.env` for production overrides:
 
 | Variable | Notes |
 |----------|--------|
-| `JWT_SECRET` | Required in production (default is insecure) |
+| `JWT_SECRET` | **Required** (min 32 chars; server exits on startup if missing or weak) |
+| `CORS_ORIGINS` | **Required in production** — comma-separated browser UI origins (e.g. `https://mes.example.com`). Dev allows `localhost:5173–5176` plus any values you add here. |
 | `PORT` | Example file shows 3000; dev server uses **3001** unless you change `server/index.js` |
 
 ## Tech Stack

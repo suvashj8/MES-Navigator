@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../context/ThemeContext';
 
 const items = [
@@ -23,7 +23,7 @@ export default function MobileNav() {
     });
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-900/95 backdrop-blur safe-pb print:hidden">
+    <nav className="mes-mobile-nav md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-900/95 backdrop-blur safe-pb print:hidden">
       <div className="flex justify-around py-2">
         {visible.map((item) => (
           <NavLink
