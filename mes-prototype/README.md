@@ -1,6 +1,6 @@
 # MES Prototype — Daily Worker Performance & Grading
 
-Prototype for **Navigator Bead for Life** manufacturing (based on `bed for life.xlsx`).
+Prototype for **Navigator Bead for Life** manufacturing (based on [`bead for life.xlsx`](../bead%20for%20life.xlsx) in the repo root).
 
 ## Features
 
@@ -70,7 +70,7 @@ Saves are **atomic**: product row + account mapping + excise mapping commit in o
 **Requires PostgreSQL** (no SQLite). Create a database, then configure the server:
 
 ```powershell
-cd "C:\Users\rakesh\Desktop\Suvash project\new project\mes-prototype"
+cd mes-prototype
 cd server
 copy .env.example .env
 # Edit .env with your Postgres host, user, password, and DB_NAME=mes_prototype
