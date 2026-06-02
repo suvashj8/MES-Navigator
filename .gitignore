@@ -33,3 +33,7 @@ Thumbs.db
 # PWA dev build output
 mes-prototype/client/dev-dist/
 
+# Postman local workspace (API testing only — not part of the app)
+mes-prototype/postman/
+mes-prototype/.postman/
+

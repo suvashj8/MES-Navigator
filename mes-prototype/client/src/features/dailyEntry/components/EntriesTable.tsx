@@ -1,6 +1,7 @@
 import GradeBadge from '../../../components/GradeBadge';
 import { labels } from '../../../labels';
 import type { DailyEntry } from '../../../api';
+import { formatNepalDateTime } from '../../../utils/formatDateTime';
 
 export default function EntriesTable({
   entries,
@@ -14,33 +15,23 @@ export default function EntriesTable({
   onDelete: (id: number) => void;
 }) {
   const colCount = canDelete ? 10 : 9;
+  const thCls = 'px-4 py-3 whitespace-nowrap text-left';
+  const tdCls = 'px-4 py-3 align-middle';
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-800">
-      <table className="w-full text-sm table-fixed">
-        <colgroup>
-          <col className="w-14" />
-          <col className="w-[22%]" />
-          <col className="w-20" />
-          <col className="w-[28%]" />
-          <col className="w-12" />
-          <col className="w-14" />
-          <col className="w-20" />
-          <col className="w-28" />
-          <col className="w-40" />
-          {canDelete && <col className="w-14" />}
-        </colgroup>
+      <table className="mes-entries-table w-full min-w-[56rem] text-sm">
         <thead className="bg-slate-900 text-slate-400 text-left">
           <tr>
-            <th className="p-3 whitespace-nowrap">{labels.regNo.en}</th>
-            <th className="p-3 whitespace-nowrap">{labels.worker.en}</th>
-            <th className="p-3 whitespace-nowrap">{labels.product.en}</th>
-            <th className="p-3 whitespace-nowrap">{labels.costCenter.en}</th>
-            <th className="p-3 text-right whitespace-nowrap">Qty</th>
-            <th className="p-3 whitespace-nowrap">Grade</th>
-            <th className="p-3 whitespace-nowrap">Entered by</th>
-            <th className="p-3 whitespace-nowrap">Time</th>
-            <th className="p-3 whitespace-nowrap">Updated</th>
-            {canDelete && <th className="p-3 whitespace-nowrap" />}
+            <th className={`${thCls} w-[6.5rem]`}>{labels.regNo.en}</th>
+            <th className={`${thCls} min-w-[9rem]`}>{labels.worker.en}</th>
+            <th className={`${thCls} w-[5.5rem]`}>{labels.product.en}</th>
+            <th className={`${thCls} min-w-[8rem]`}>{labels.costCenter.en}</th>
+            <th className={`${thCls} w-[4.5rem] text-right`}>Qty</th>
+            <th className={`${thCls} w-[4.5rem]`}>Grade</th>
+            <th className={`${thCls} min-w-[5.5rem]`}>Entered by</th>
+            <th className={`${thCls} min-w-[12rem]`}>Saved (Nepal time)</th>
+            <th className={`${thCls} min-w-[12rem]`}>Updated (Nepal time)</th>
+            {canDelete && <th className={`${thCls} w-[4.5rem]`} />}
           </tr>
         </thead>
         <tbody>
@@ -57,28 +48,34 @@ export default function EntriesTable({
                 id={`entry-row-${e.id}`}
                 className={`border-t border-slate-800 hover:bg-slate-900/50 transition-colors ${entryRowClass(e.id)}`}
               >
-                <td className="p-3">{e.reg_no}</td>
-                <td className="p-3 truncate">{e.staff_name}</td>
-                <td className="p-3 font-mono text-xs">{e.prod_code}</td>
-                <td className="p-3 text-xs text-slate-400 truncate">{e.cost_center_name || e.cost_center_code}</td>
-                <td className="p-3 text-right font-medium">{e.quantity}</td>
-                <td className="p-3">
+                <td className={`${tdCls} font-mono text-xs tabular-nums whitespace-nowrap border-r border-slate-800/60`}>
+                  {e.reg_no}
+                </td>
+                <td className={`${tdCls} truncate max-w-[14rem]`}>{e.staff_name}</td>
+                <td className={`${tdCls} font-mono text-xs whitespace-nowrap`}>{e.prod_code}</td>
+                <td className={`${tdCls} text-xs text-slate-400 truncate max-w-[12rem]`}>
+                  {e.cost_center_name || e.cost_center_code}
+                </td>
+                <td className={`${tdCls} text-right font-medium tabular-nums`}>{e.quantity}</td>
+                <td className={tdCls}>
                   <GradeBadge grade={e.grade} />
                 </td>
-                <td className="p-3 text-xs text-slate-400">{e.entered_by || '—'}</td>
-                <td className="p-3 text-xs text-slate-400 whitespace-nowrap">{e.created_at || '—'}</td>
-                <td className="p-3 text-xs text-slate-400 whitespace-nowrap">
+                <td className={`${tdCls} text-xs text-slate-400`}>{e.entered_by || '—'}</td>
+                <td className={`${tdCls} text-xs text-slate-400 whitespace-nowrap`} title={e.created_at || undefined}>
+                  {formatNepalDateTime(e.created_at)}
+                </td>
+                <td className={`${tdCls} text-xs text-slate-400 whitespace-nowrap`} title={e.updated_at || undefined}>
                   {e.updated_at ? (
                     <>
                       {e.updated_by ? <span className="text-slate-300">{e.updated_by}</span> : 'Updated'}
-                      <span className="ml-2 text-slate-500">{e.updated_at}</span>
+                      <span className="ml-2 text-slate-500">{formatNepalDateTime(e.updated_at)}</span>
                     </>
                   ) : (
                     <span className="text-slate-600">—</span>
                   )}
                 </td>
                 {canDelete && (
-                  <td className="p-3">
+                  <td className={tdCls}>
                     <button
                       type="button"
                       onClick={() => onDelete(e.id)}

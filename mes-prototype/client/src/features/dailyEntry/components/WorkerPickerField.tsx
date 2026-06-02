@@ -45,7 +45,7 @@ export default function WorkerPickerField({
       floorMode={floorMode}
       highlight={nextStep === 'worker'}
       hint={nextStep === 'worker' ? 'Select who did the work' : undefined}
-      className="flex-[2] min-w-[12rem]"
+      className="flex-1 min-w-[10rem] max-w-[14rem] sm:max-w-[16rem] lg:max-w-[17rem]"
     >
       <div ref={workerPickerRef} className="relative w-full">
         <button

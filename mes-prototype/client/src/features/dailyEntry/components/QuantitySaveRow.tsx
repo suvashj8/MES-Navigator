@@ -48,6 +48,10 @@ export default function QuantitySaveRow({
     ? `h-12 w-12 rounded-xl border border-slate-700 bg-slate-800 text-xl font-bold ${!quantityEnabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'}`
     : `h-10 w-10 rounded-lg border border-slate-700 bg-slate-800 text-lg font-bold ${!quantityEnabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700'}`;
 
+  const labelSpacerCls = `block shrink-0 mb-1.5 ${showNepali ? 'min-h-[2.25rem]' : 'h-4 leading-4'}`;
+  const controlRowCls = `${floorMode ? 'min-h-12' : 'min-h-10'} flex items-center w-full`;
+  const hintRowCls = 'text-[10px] leading-4 h-4 mt-1 flex items-center truncate';
+
   return (
     <>
       <FormField
@@ -116,15 +120,14 @@ export default function QuantitySaveRow({
         </FormField>
       )}
 
-      <div className={`flex flex-col shrink-0 ${floorMode ? 'w-full md:w-auto' : 'sm:ml-auto'}`}>
-        <span
-          className={`block invisible select-none mb-1.5 ${floorMode ? 'min-h-[2.25rem]' : 'h-4 leading-4'}`}
-          aria-hidden
-        >
+      <div className={`flex flex-col shrink-0 ${floorMode ? 'w-full md:w-auto' : 'sm:ml-auto sm:min-w-[12rem]'}`}>
+        <span className={`${labelSpacerCls} invisible select-none`} aria-hidden>
           <span>Save</span>
-          {floorMode && <span className="block text-[10px] mt-0.5 leading-tight">{'\u00a0'}</span>}
+          {showNepali && (
+            <span className="block text-[10px] font-normal normal-case mt-0.5 leading-tight">{'\u00a0'}</span>
+          )}
         </span>
-        <div className={floorMode ? 'min-h-12 flex items-center' : 'min-h-10 flex items-center'}>
+        <div className={controlRowCls}>
           <button
             type="submit"
             disabled={saving || !preview}
@@ -132,10 +135,10 @@ export default function QuantitySaveRow({
               saveSuccess
                 ? floorMode
                   ? 'w-full md:w-auto min-w-[12rem] h-12 md:h-10 px-8 rounded-2xl md:rounded-lg bg-emerald-600 text-white font-bold md:font-semibold text-lg md:text-base shadow-lg md:shadow-none disabled:opacity-100 fixed bottom-16 left-4 right-4 z-20 md:static'
-                  : 'w-full sm:w-auto min-w-[12rem] h-10 px-8 rounded-lg bg-emerald-600 text-white font-semibold disabled:opacity-100'
+                  : 'w-full h-10 min-w-[12rem] px-8 rounded-lg bg-emerald-600 text-white font-semibold disabled:opacity-100'
                 : floorMode
                   ? 'w-full md:w-auto min-w-[12rem] h-12 md:h-10 px-8 rounded-2xl md:rounded-lg bg-amber-500 text-slate-900 font-bold md:font-semibold text-lg md:text-base shadow-lg md:shadow-none disabled:opacity-40 fixed bottom-16 left-4 right-4 z-20 md:static'
-                  : 'w-full sm:w-auto min-w-[12rem] h-10 px-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold disabled:opacity-40'
+                  : 'w-full h-10 min-w-[12rem] px-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-semibold disabled:opacity-40'
             }
           >
             {saving ? (
@@ -157,24 +160,27 @@ export default function QuantitySaveRow({
             )}
           </button>
         </div>
-        {showBeepToggle && (
-          <label className="mt-2 inline-flex items-center gap-2 text-xs text-slate-400 select-none">
-            <input
-              type="checkbox"
-              checked={beepOnSave}
-              onChange={(e) => {
-                const v = e.target.checked;
-                setBeepOnSave(v);
-                localStorage.setItem('mes_beep_on_save', v ? '1' : '0');
-              }}
-              className="h-4 w-4 accent-amber-500"
-            />
-            Beep on save
-          </label>
-        )}
-        <span className="h-4 mt-1 block invisible select-none" aria-hidden>
-          &nbsp;
-        </span>
+        <div className={hintRowCls}>
+          {showBeepToggle ? (
+            <label className="inline-flex items-center gap-2 text-slate-400 select-none truncate">
+              <input
+                type="checkbox"
+                checked={beepOnSave}
+                onChange={(e) => {
+                  const v = e.target.checked;
+                  setBeepOnSave(v);
+                  localStorage.setItem('mes_beep_on_save', v ? '1' : '0');
+                }}
+                className="h-3.5 w-3.5 shrink-0 accent-amber-500"
+              />
+              Beep on save
+            </label>
+          ) : (
+            <span className="invisible select-none" aria-hidden>
+              {'\u00a0'}
+            </span>
+          )}
+        </div>
       </div>
     </>
   );

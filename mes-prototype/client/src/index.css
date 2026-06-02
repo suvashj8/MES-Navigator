@@ -233,13 +233,16 @@ select.input {
   color: rgb(180 83 9) !important;
   font-weight: 600;
 }
+:root.theme-light .mes-date-ad-hint {
+  color: var(--pm-sage-600) !important;
+}
 
 /* Bikram Sambat calendar popover */
 .mes-bs-cal-nav {
   @apply h-7 w-7 rounded-md text-slate-400 hover:bg-slate-800 hover:text-amber-300 text-sm leading-none;
 }
 .mes-bs-cal-day {
-  @apply h-8 rounded-md text-xs text-slate-200 hover:bg-slate-800 hover:text-amber-200;
+  @apply h-8 min-w-[2rem] rounded-md text-xs text-slate-200 hover:bg-slate-800 hover:text-amber-200;
 }
 .mes-bs-cal-day--selected {
   @apply bg-amber-500/25 text-amber-200 font-semibold ring-1 ring-amber-500/50;
@@ -393,6 +396,23 @@ select.input {
 
 .mes-prod-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.mes-entries-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.mes-entries-table thead th:first-child,
+.mes-entries-table tbody td:first-child {
+  padding-left: 1.25rem;
+}
+.mes-entries-table thead th:last-child,
+.mes-entries-table tbody td:last-child {
+  padding-right: 1.25rem;
+}
+
+:root.theme-light .mes-entries-table tbody td.border-r {
+  border-color: rgb(203 213 225 / 0.65) !important;
 }
 
 /* Grade badges (C/B need stronger text in light mode) */

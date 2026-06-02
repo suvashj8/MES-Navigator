@@ -6,6 +6,7 @@ import Toast from '../components/Toast';
 import TableSkeleton from '../components/skeleton/TableSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
+import { formatNepalDateTime } from '../utils/formatDateTime';
 
 export default function DeletedEntries() {
   const { can } = useAuth();
@@ -162,7 +163,7 @@ export default function DeletedEntries() {
             <table className="w-full text-sm">
               <thead className="bg-slate-900 text-slate-400 text-left">
                 <tr>
-                  <th className="p-3 whitespace-nowrap">Deleted at</th>
+                  <th className="p-3 whitespace-nowrap">Deleted (Nepal time)</th>
                   <th className="p-3 whitespace-nowrap">Entry date</th>
                   <th className="p-3">Worker</th>
                   <th className="p-3">Product</th>
@@ -170,14 +171,16 @@ export default function DeletedEntries() {
                   <th className="p-3 text-right whitespace-nowrap">Qty</th>
                   <th className="p-3 whitespace-nowrap">Entered by</th>
                   <th className="p-3 whitespace-nowrap">Deleted by</th>
-                  <th className="p-3 whitespace-nowrap">Created at</th>
+                  <th className="p-3 whitespace-nowrap">Created (Nepal time)</th>
                   <th className="p-3"></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t border-slate-800 align-top">
-                    <td className="p-3 text-xs text-slate-500 whitespace-nowrap">{r.deleted_at}</td>
+                    <td className="p-3 text-xs text-slate-500 whitespace-nowrap" title={r.deleted_at}>
+                      {formatNepalDateTime(r.deleted_at)}
+                    </td>
                     <td className="p-3 text-xs text-slate-500 whitespace-nowrap">{r.entry_date}</td>
                     <td className="p-3">
                       <p className="font-medium truncate">{r.staff_name || `Staff #${r.staff_id}`}</p>
@@ -197,7 +200,9 @@ export default function DeletedEntries() {
                     <td className="p-3 text-right font-semibold">{r.quantity}</td>
                     <td className="p-3 text-xs text-slate-500 whitespace-nowrap">{r.entered_by || '—'}</td>
                     <td className="p-3 text-xs text-slate-500 whitespace-nowrap">{r.deleted_by || '—'}</td>
-                    <td className="p-3 text-xs text-slate-500 whitespace-nowrap">{r.created_at || '—'}</td>
+                    <td className="p-3 text-xs text-slate-500 whitespace-nowrap" title={r.created_at || undefined}>
+                      {formatNepalDateTime(r.created_at)}
+                    </td>
                     <td className="p-3 whitespace-nowrap text-right">
                       <button
                         type="button"

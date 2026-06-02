@@ -1,5 +1,6 @@
 import GradeBadge from '../../../components/GradeBadge';
 import type { DailyEntry } from '../../../api';
+import { formatNepalDateTime } from '../../../utils/formatDateTime';
 
 export default function EntriesList({
   entries,
@@ -25,10 +26,14 @@ export default function EntriesList({
             <p className="text-xs text-slate-400 font-mono">
               {e.prod_code} · Qty {e.quantity}
               {e.entered_by && <span className="ml-2 text-slate-500">· {e.entered_by}</span>}
-              {e.created_at && <span className="ml-2 text-slate-500">{e.created_at}</span>}
+              {e.created_at && (
+                <span className="ml-2 text-slate-500" title={e.created_at}>
+                  · {formatNepalDateTime(e.created_at)}
+                </span>
+              )}
               {showAudit && e.updated_at && (
-                <span className="ml-2 text-slate-600">
-                  · upd {e.updated_by || '—'} {e.updated_at}
+                <span className="ml-2 text-slate-600" title={e.updated_at}>
+                  · upd {e.updated_by || '—'} {formatNepalDateTime(e.updated_at)}
                 </span>
               )}
             </p>

@@ -196,7 +196,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
           }
         >
           <div className={FORM_ROW_CLS}>
-            <div className="w-full sm:w-[17rem] shrink-0">
+            <div className="w-full sm:flex-[1.4] sm:min-w-[20rem] sm:max-w-[28rem] shrink-0">
               <DateInput
                 label={labels.entryDate.en}
                 subtitle={labels.entryDate.ne}
@@ -302,7 +302,7 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
             />
           </div>
 
-          <div className={`${FORM_ROW_CLS} items-end`}>
+          <div className={FORM_ROW_CLS}>
             <QuantitySaveRow
               floorMode={floorMode}
               showNepali={showNepali}

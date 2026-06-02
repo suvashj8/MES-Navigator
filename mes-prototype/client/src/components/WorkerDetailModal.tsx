@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, downloadBlob, type DailyGradingAuditRow, type ScorecardParams, type WorkerDetail } from '../api';
 import GradeBadge from './GradeBadge';
+import { formatNepalDateTime } from '../utils/formatDateTime';
 import Spinner from './Spinner';
 
 export default function WorkerDetailModal({
@@ -123,8 +124,8 @@ export default function WorkerDetailModal({
                       <th className="py-2 text-right">Qty</th>
                       <th className="py-2">Grade</th>
                       <th className="py-2">Entered by</th>
-                      <th className="py-2">Time</th>
-                      <th className="py-2">Updated</th>
+                      <th className="py-2">Saved (Nepal time)</th>
+                      <th className="py-2">Updated (Nepal time)</th>
                       <th className="py-2"></th>
                     </tr>
                   </thead>
@@ -137,9 +138,11 @@ export default function WorkerDetailModal({
                         <td className="py-2 text-right">{e.quantity}</td>
                         <td className="py-2"><GradeBadge grade={e.grade} /></td>
                         <td className="py-2 text-slate-400">{e.entered_by || '—'}</td>
-                        <td className="py-2 text-slate-400 whitespace-nowrap">{e.created_at || '—'}</td>
-                        <td className="py-2 text-slate-400 whitespace-nowrap">
-                          {e.updated_at ? `${e.updated_by || '—'} · ${e.updated_at}` : '—'}
+                        <td className="py-2 text-slate-400 whitespace-nowrap" title={e.created_at || undefined}>
+                          {formatNepalDateTime(e.created_at)}
+                        </td>
+                        <td className="py-2 text-slate-400 whitespace-nowrap" title={e.updated_at || undefined}>
+                          {e.updated_at ? `${e.updated_by || '—'} · ${formatNepalDateTime(e.updated_at)}` : '—'}
                         </td>
                         <td className="py-2 text-right whitespace-nowrap">
                           <button

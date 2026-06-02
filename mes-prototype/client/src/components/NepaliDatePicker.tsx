@@ -122,7 +122,7 @@ export default function NepaliDatePicker({
           id={listId}
           role="dialog"
           aria-label="Bikram Sambat calendar"
-          className="mes-bs-calendar absolute right-0 z-50 mt-1 w-[min(100%,17.5rem)] rounded-xl border border-slate-700 bg-slate-900 shadow-xl p-3"
+          className="mes-bs-calendar absolute left-0 z-50 mt-1 w-[18.5rem] min-w-[18.5rem] rounded-xl border border-slate-700 bg-slate-900 shadow-xl p-3"
         >
           <div className="flex items-center justify-between gap-1 mb-2">
             <button type="button" className="mes-bs-cal-nav" onClick={() => shiftYear(-1)} aria-label="Previous year">

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import NepaliDatePicker from './NepaliDatePicker';
+import { formatAdDisplay } from '../utils/formatDateTime';
 
 type Props = {
   label?: string;
@@ -62,6 +63,8 @@ export default function DateInput({
   const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-400 uppercase';
   const shouldShowSubtitle = showSubtitle ?? Boolean(floorMode);
   const reserveLine = reserveSubtitleLine ?? shouldShowSubtitle;
+  const adHint = formatAdDisplay(value);
+  const hintCls = 'text-[10px] leading-4 h-4 mt-1 truncate';
 
   if (aligned) {
     return (
@@ -81,26 +84,36 @@ export default function DateInput({
             )}
           </label>
         )}
-        <div className={`flex gap-2 ${floorMode ? 'min-h-12' : 'min-h-10'}`}>
-          <input
-            type="date"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className={`${inputCls} flex-1 min-w-0`}
-            title="Gregorian (AD)"
-          />
-          <NepaliDatePicker
-            value={bs}
-            onChange={(v) => void applyBs(v)}
-            className="flex-1 min-w-0"
-            inputClassName={`${inputCls} flex-1 min-w-0`}
-            placeholder="YYYY-MM-DD (BS)"
-            title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
-          />
+        <div
+          className="grid gap-x-2 gap-y-0"
+          style={{ gridTemplateColumns: 'minmax(8.25rem, 0.95fr) minmax(11.5rem, 1.15fr)' }}
+        >
+          <div className="min-w-0">
+            <input
+              type="date"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              className={`${inputCls} min-w-0 w-full ${floorMode ? 'min-h-12' : 'min-h-10'}`}
+              title="Gregorian (AD)"
+            />
+            <p className={`mes-date-ad-hint ${hintCls} ${adHint ? 'text-slate-400' : 'invisible select-none'}`}>
+              {adHint || '\u00a0'}
+            </p>
+          </div>
+          <div className="min-w-0">
+            <NepaliDatePicker
+              value={bs}
+              onChange={(v) => void applyBs(v)}
+              className="min-w-0 w-full"
+              inputClassName={`${inputCls} min-w-0 w-full ${floorMode ? 'min-h-12' : 'min-h-10'}`}
+              placeholder="YYYY-MM-DD (BS)"
+              title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
+            />
+            <p className={`mes-date-bs-hint ${hintCls} ${bsDisplay ? 'text-amber-400/80' : 'invisible select-none'}`}>
+              {bsDisplay || '\u00a0'}
+            </p>
+          </div>
         </div>
-        <p className={`mes-date-bs-hint text-[10px] leading-4 h-4 mt-1 truncate ${bsDisplay ? 'text-amber-400/80' : 'invisible'}`}>
-          {bsDisplay || '\u00a0'}
-        </p>
       </div>
     );
   }
