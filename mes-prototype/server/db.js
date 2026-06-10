@@ -3,10 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-
-dotenv.config();
+import { loadDevPorts } from './lib/devPorts.js';
+import { syncDepartmentsFromExisting } from './lib/departments.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const devPorts = process.env.NODE_ENV !== 'production' ? loadDevPorts() : null;
 
 /** Runtime guard: this codebase must not run against SQLite. */
 function assertPostgresOnly() {
@@ -29,7 +32,7 @@ function poolConfig() {
   }
   return {
     host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 5432,
+    port: Number(process.env.DB_PORT) || devPorts?.db || 5432,
     database: process.env.DB_NAME || 'mes_prototype',
     user: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
@@ -220,6 +223,41 @@ async function ensureStaffPhotoPathColumn() {
   }
 }
 
+async function ensureDescriptionColumn(table) {
+  const col = await one(
+    `
+    SELECT 1 AS ok FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = ? AND column_name = 'description'
+    `,
+    [table]
+  );
+  if (!col) {
+    await pool.query(`ALTER TABLE ${table} ADD COLUMN description TEXT DEFAULT ''`);
+    console.log(`Schema: added ${table}.description`);
+  }
+}
+
+async function ensureDepartmentsTable() {
+  const table = await one(
+    `
+    SELECT 1 AS ok FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'departments'
+    `
+  );
+  if (table) return;
+  await pool.query(`
+    CREATE TABLE departments (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      name TEXT UNIQUE NOT NULL,
+      description TEXT DEFAULT '',
+      is_active INTEGER DEFAULT 1,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log('Schema: created departments table');
+}
+
 export async function initSchema() {
   assertPostgresOnly();
   warnIfLegacySqlitePresent();
@@ -227,6 +265,10 @@ export async function initSchema() {
   await logPostgresIdentity();
   await execSchemaFile();
   await ensureStaffPhotoPathColumn();
+  await ensureDepartmentsTable();
+  await ensureDescriptionColumn('activities');
+  await ensureDescriptionColumn('cost_centers');
+  await syncDepartmentsFromExisting();
   await syncCostCentersFromStandards();
   await linkGradingStandardsProductMasterIds();
 }

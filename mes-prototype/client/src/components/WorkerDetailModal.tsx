@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, downloadBlob, type DailyGradingAuditRow, type ScorecardParams, type WorkerDetail } from '../api';
 import GradeBadge from './GradeBadge';
 import { formatNepalDateTime } from '../utils/formatDateTime';
+import ModalCloseButton from './ModalCloseButton';
 import Spinner from './Spinner';
 
 export default function WorkerDetailModal({
@@ -52,7 +53,9 @@ export default function WorkerDetailModal({
   }
 
   function printCard() {
-    window.print();
+    requestAnimationFrame(() => {
+      window.print();
+    });
   }
 
   async function exportPdf() {
@@ -69,20 +72,32 @@ export default function WorkerDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-start justify-center p-4 z-50 overflow-y-auto print:bg-white print:p-0">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl w-full max-w-2xl my-4 print:border-0 print:shadow-none print:max-w-none">
-        <div className="flex justify-between items-center p-5 border-b border-slate-800 print:border-slate-300">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 print:static print:overflow-visible print:p-0">
+      <div
+        className="absolute inset-0 bg-black/70 print:hidden"
+        aria-hidden
+        onClick={onClose}
+      />
+      <div
+        id="scorecard-print-area"
+        className="relative my-4 w-full max-w-5xl rounded-xl border border-border bg-card text-card-foreground shadow-lg print:my-0 print:max-w-none print:border-0 print:shadow-none"
+      >
+        <div className="relative flex items-center justify-between border-b border-border p-5 pr-14 print:border-slate-300">
           <h3 className="font-semibold text-lg print:text-black">Worker Scorecard</h3>
           <div className="flex gap-2 print:hidden">
             <button type="button" onClick={exportPdf} disabled={pdfLoading}
               className="px-3 py-1.5 text-sm border border-red-600/50 text-red-300 rounded-lg hover:bg-red-900/20">
               {pdfLoading ? '...' : 'PDF'}
             </button>
-            <button type="button" onClick={printCard} className="px-3 py-1.5 text-sm border border-slate-600 rounded-lg hover:bg-slate-800">
+            <button
+              type="button"
+              onClick={printCard}
+              className="rounded-lg border border-input bg-background px-3 py-1.5 text-sm hover:bg-muted"
+            >
               Print
             </button>
-            <button type="button" onClick={onClose} className="text-slate-400 hover:text-white text-xl leading-none px-2">×</button>
           </div>
+          <ModalCloseButton onClick={onClose} className="absolute right-4 top-4 print:hidden" />
         </div>
 
         {loading ? (
@@ -111,52 +126,72 @@ export default function WorkerDetailModal({
             )}
 
             <div>
-              <h4 className="text-sm font-medium text-slate-300 mb-2 print:text-black">Daily Entries</h4>
+              <h4 className="mb-2 text-sm font-medium text-foreground print:text-black">Daily Entries</h4>
               {detail.entries.length === 0 ? (
-                <p className="text-slate-500 text-sm">No entries in this period.</p>
+                <p className="text-sm text-muted-foreground">No entries in this period.</p>
               ) : (
-                <table className="w-full text-xs">
-                  <thead className="text-slate-400 text-left border-b border-slate-800">
-                    <tr>
-                      <th className="py-2">Date</th>
-                      <th className="py-2">Product</th>
-                      <th className="py-2">Work station</th>
-                      <th className="py-2 text-right">Qty</th>
-                      <th className="py-2">Grade</th>
-                      <th className="py-2">Entered by</th>
-                      <th className="py-2">Saved (Nepal time)</th>
-                      <th className="py-2">Updated (Nepal time)</th>
-                      <th className="py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.entries.map((e) => (
-                      <tr key={e.id} className="border-b border-slate-800/50">
-                        <td className="py-2">{e.entry_date}</td>
-                        <td className="py-2 font-mono">{e.prod_code}</td>
-                        <td className="py-2 text-slate-400">{e.cost_center_name || e.cost_center_code}</td>
-                        <td className="py-2 text-right">{e.quantity}</td>
-                        <td className="py-2"><GradeBadge grade={e.grade} /></td>
-                        <td className="py-2 text-slate-400">{e.entered_by || '—'}</td>
-                        <td className="py-2 text-slate-400 whitespace-nowrap" title={e.created_at || undefined}>
-                          {formatNepalDateTime(e.created_at)}
-                        </td>
-                        <td className="py-2 text-slate-400 whitespace-nowrap" title={e.updated_at || undefined}>
-                          {e.updated_at ? `${e.updated_by || '—'} · ${formatNepalDateTime(e.updated_at)}` : '—'}
-                        </td>
-                        <td className="py-2 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => openAudit(e.id)}
-                            className="text-[11px] text-amber-300 hover:text-amber-200"
-                          >
-                            History
-                          </button>
-                        </td>
+                <div className="-mx-5 overflow-x-auto px-5 print:overflow-visible print:mx-0 print:px-0">
+                  <table className="w-full min-w-[52rem] border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-border text-left text-muted-foreground">
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Date</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Product</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Work station</th>
+                        <th className="whitespace-nowrap py-2 pr-4 text-right font-semibold">Qty</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Grade</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Entered by</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Saved (Nepal)</th>
+                        <th className="whitespace-nowrap py-2 pr-4 font-semibold">Updated (Nepal)</th>
+                        <th className="whitespace-nowrap py-2 pl-2 text-right font-semibold print:hidden">
+                          Actions
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {detail.entries.map((e) => (
+                        <tr key={e.id} className="border-b border-border/60">
+                          <td className="whitespace-nowrap py-2.5 pr-4">{e.entry_date}</td>
+                          <td className="whitespace-nowrap py-2.5 pr-4 font-mono font-medium">{e.prod_code}</td>
+                          <td className="max-w-[8rem] py-2.5 pr-4 text-muted-foreground">
+                            <span className="line-clamp-2">{e.cost_center_name || e.cost_center_code}</span>
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pr-4 text-right tabular-nums">{e.quantity}</td>
+                          <td className="whitespace-nowrap py-2.5 pr-4">
+                            <GradeBadge grade={e.grade} />
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pr-4 text-muted-foreground">
+                            {e.entered_by || '—'}
+                          </td>
+                          <td
+                            className="whitespace-nowrap py-2.5 pr-4 text-primary"
+                            title={e.created_at || undefined}
+                          >
+                            {formatNepalDateTime(e.created_at)}
+                          </td>
+                          <td className="py-2.5 pr-4 text-muted-foreground" title={e.updated_at || undefined}>
+                            {e.updated_at ? (
+                              <span className="block whitespace-nowrap">
+                                <span className="block text-foreground">{e.updated_by || '—'}</span>
+                                <span className="block text-primary">{formatNepalDateTime(e.updated_at)}</span>
+                              </span>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                          <td className="whitespace-nowrap py-2.5 pl-2 text-right print:hidden">
+                            <button
+                              type="button"
+                              onClick={() => openAudit(e.id)}
+                              className="text-[11px] font-medium text-primary hover:underline"
+                            >
+                              History
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
@@ -211,9 +246,9 @@ export default function WorkerDetailModal({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-800/50 rounded-lg p-3 print:bg-slate-100">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className="font-semibold">{value}</p>
+    <div className="rounded-lg border border-border bg-muted/40 p-3 print:border-slate-200 print:bg-slate-50">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-semibold leading-snug text-foreground">{value}</p>
     </div>
   );
 }

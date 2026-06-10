@@ -12,6 +12,14 @@ const nepalDateTimeFmt = new Intl.DateTimeFormat('en-GB', {
   hour12: true,
 });
 
+const nepalTimeFmt = new Intl.DateTimeFormat('en-GB', {
+  timeZone: NEPAL_TIME_ZONE,
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: true,
+});
+
 /**
  * Show an API/DB timestamp in Nepal local wall-clock time (readable, no Zulu suffix).
  */
@@ -23,6 +31,11 @@ export function formatAdDisplay(ad: string | null | undefined): string {
   const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
   if (Number.isNaN(d.getTime())) return `${ad} AD`;
   return `${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(d)} AD`;
+}
+
+/** Current wall-clock time in Nepal (for live UI hints). */
+export function formatNepalTimeNow(date: Date = new Date()): string {
+  return nepalTimeFmt.format(date);
 }
 
 export function formatNepalDateTime(iso: string | null | undefined): string {

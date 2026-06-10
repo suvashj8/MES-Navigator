@@ -46,7 +46,7 @@ npm run seed
 npm run dev
 ```
 
-- **UI:** http://localhost:5173  
+- **UI:** http://localhost:5174  
 - **API:** http://localhost:3001  
 
 **Demo logins** (change before production): `admin` / `admin123`, `supervisor` / `super123`, `operator` / `oper123`

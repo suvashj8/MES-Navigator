@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, type Staff } from '../api';
+import { api, type Department, type Staff } from '../api';
+import ModalCloseButton from '../components/ModalCloseButton';
 import PageShell from '../components/PageShell';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
@@ -14,13 +15,19 @@ export default function StaffMaster() {
   const canWrite = can('staff:write');
   const [staff, setStaff] = useState<Staff[]>([]);
   const [department, setDepartment] = useState('');
-  const [departments, setDepartments] = useState<string[]>([]);
+  const [departmentRows, setDepartmentRows] = useState<Department[]>([]);
   const [q, setQ] = useState('');
   const [showFormer, setShowFormer] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showAddDept, setShowAddDept] = useState(false);
   const [regNo, setRegNo] = useState('');
   const [name, setName] = useState('');
-  const [newDept, setNewDept] = useState('Production');
+  const [newDept, setNewDept] = useState('');
+  const [deptCode, setDeptCode] = useState('');
+  const [deptName, setDeptName] = useState('');
+  const [deptDescription, setDeptDescription] = useState('');
+  const [deptError, setDeptError] = useState('');
+  const [deptSaving, setDeptSaving] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -37,8 +44,15 @@ export default function StaffMaster() {
       .then(setStaff);
   }
 
+  function reloadDepartments() {
+    return api.departments().then((rows) => {
+      setDepartmentRows(rows);
+      if (!newDept && rows.length) setNewDept(rows[0].name);
+    });
+  }
+
   useEffect(() => {
-    api.departments().then(setDepartments);
+    void reloadDepartments();
   }, []);
 
   useEffect(() => {
@@ -67,6 +81,34 @@ export default function StaffMaster() {
   const activeStaff = useMemo(() => staff.filter((s) => s.is_active !== 0), [staff]);
   const formerCount = useMemo(() => staff.filter((s) => s.is_active === 0).length, [staff]);
 
+  function openAddDept() {
+    setDeptCode('');
+    setDeptName('');
+    setDeptDescription('');
+    setDeptError('');
+    setShowAddDept(true);
+  }
+
+  async function handleAddDepartment(e: React.FormEvent) {
+    e.preventDefault();
+    setDeptError('');
+    setDeptSaving(true);
+    try {
+      const created = await api.createDepartment({
+        code: deptCode.trim(),
+        name: deptName.trim(),
+        description: deptDescription.trim(),
+      });
+      await reloadDepartments();
+      setNewDept(created.name);
+      setShowAddDept(false);
+    } catch (err) {
+      setDeptError(err instanceof Error ? err.message : 'Failed to add department');
+    } finally {
+      setDeptSaving(false);
+    }
+  }
+
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setError('');
@@ -79,6 +121,10 @@ export default function StaffMaster() {
       const trimmedName = name.trim();
       if (!isValidPersonName(trimmedName)) {
         setError('Name must use letters only (no numbers or minus signs)');
+        return;
+      }
+      if (!newDept.trim()) {
+        setError('Please select a department');
         return;
       }
       await api.createStaff(
@@ -173,13 +219,22 @@ export default function StaffMaster() {
           </p>
         </div>
         {canWrite && (
-          <button
-            type="button"
-            onClick={() => setShowAdd(true)}
-            className="px-4 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold text-sm"
-          >
-            + Add Staff
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowAdd(true)}
+              className="px-4 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold text-sm"
+            >
+              + Add Staff
+            </button>
+            <button
+              type="button"
+              onClick={openAddDept}
+              className="px-4 py-2 rounded-lg border border-primary/40 bg-background text-primary font-semibold text-sm hover:bg-accent"
+            >
+              + Add Department
+            </button>
+          </div>
         )}
       </header>
 
@@ -196,9 +251,9 @@ export default function StaffMaster() {
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
         >
           <option value="">All Departments</option>
-          {departments.map((d) => (
-            <option key={d} value={d}>
-              {d}
+          {departmentRows.map((d) => (
+            <option key={d.id} value={d.name}>
+              {d.code} — {d.name}
             </option>
           ))}
         </select>
@@ -324,13 +379,72 @@ export default function StaffMaster() {
         ))}
       </div>
 
+      {showAddDept && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+          <form
+            onSubmit={handleAddDepartment}
+            className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 pt-12 w-full max-w-md space-y-3"
+          >
+            <ModalCloseButton onClick={() => setShowAddDept(false)} className="absolute right-4 top-4 z-10" />
+            <h3 className="font-semibold pr-10">Add Department</h3>
+            <div>
+              <label className="text-xs text-slate-400">Department ID *</label>
+              <input
+                type="text"
+                value={deptCode}
+                onChange={(e) => setDeptCode(e.target.value.toUpperCase().replace(/\s/g, ''))}
+                placeholder="e.g. PROD, QC01"
+                maxLength={20}
+                required
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 font-mono text-sm"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1">Letters, numbers, hyphen, underscore</p>
+            </div>
+            <div>
+              <label className="text-xs text-slate-400">Department name *</label>
+              <input
+                type="text"
+                value={deptName}
+                onChange={(e) => setDeptName(e.target.value)}
+                placeholder="e.g. Production"
+                maxLength={120}
+                required
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-400">Description</label>
+              <textarea
+                value={deptDescription}
+                onChange={(e) => setDeptDescription(e.target.value)}
+                placeholder="Optional notes about this department"
+                maxLength={500}
+                rows={3}
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm resize-y"
+              />
+            </div>
+            {deptError && <p className="text-red-400 text-sm">{deptError}</p>}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="submit"
+                disabled={deptSaving}
+                className="flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold disabled:opacity-50"
+              >
+                {deptSaving ? 'Saving…' : 'Save department'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {showAdd && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
           <form
             onSubmit={handleAdd}
-            className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-sm space-y-3"
+            className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 pt-12 w-full max-w-sm space-y-3"
           >
-            <h3 className="font-semibold">Add Staff</h3>
+            <ModalCloseButton onClick={() => setShowAdd(false)} className="absolute right-4 top-4 z-10" />
+            <h3 className="font-semibold pr-10">Add Staff</h3>
             <input
               type="text"
               inputMode="numeric"
@@ -353,17 +467,19 @@ export default function StaffMaster() {
               required
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
             />
+            <label className="text-xs text-slate-400 block mb-1">Department *</label>
             <select
               value={newDept}
               onChange={(e) => setNewDept(e.target.value)}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
+              required
             >
-              {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
+              <option value="">Select department…</option>
+              {departmentRows.map((d) => (
+                <option key={d.id} value={d.name}>
+                  {d.code} — {d.name}
                 </option>
               ))}
-              <option value="Production">Production</option>
             </select>
 
             <div className="flex items-center gap-3">

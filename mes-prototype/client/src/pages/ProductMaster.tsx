@@ -10,6 +10,7 @@ import type {
   VatCategory,
 } from '../api';
 import { useAuth } from '../hooks/useAuth';
+import ModalCloseButton from '../components/ModalCloseButton';
 import Spinner from '../components/Spinner';
 import {
   asNonNegativeNumberOrUndef,
@@ -205,10 +206,11 @@ function PmUomField({
           onClick={cancelCustom}
         >
           <div
-            className="w-full max-w-[17rem] rounded-lg border border-slate-700 bg-slate-900 p-3.5 shadow-xl"
+            className="relative w-full max-w-[17rem] rounded-lg border border-slate-700 bg-slate-900 p-3.5 pt-10 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h4 id="uom-popup-title" className="text-sm font-semibold text-slate-100">
+            <ModalCloseButton onClick={cancelCustom} className="absolute right-2 top-2 z-10 h-8 w-8 text-sm" />
+            <h4 id="uom-popup-title" className="text-sm font-semibold text-slate-100 pr-8">
               Custom UOM
             </h4>
 
@@ -657,13 +659,14 @@ export default function ProductMasterPage() {
 
   return (
     <div className="mes-page flex flex-col w-full min-h-0 max-w-[96rem] mx-auto px-2 md:px-4 py-1 pb-28 md:pb-16 print:p-0 print:pb-0">
-      <div className="sticky top-0 z-30 shrink-0 border-b border-slate-800 bg-slate-950 px-2 py-1.5">
-        <div className="flex items-center justify-between gap-2">
+      <div className="sticky top-0 z-30 mb-2 shrink-0">
+        <div className="overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm">
+        <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
           <div className="min-w-0">
-            <h1 className="text-sm font-semibold leading-tight">Product Master</h1>
-            <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-              <span className="text-slate-400">Editing:</span>{' '}
-              <span className="text-slate-300">{editingLabel}</span>
+            <h1 className="text-sm font-semibold leading-tight text-foreground">Product Master</h1>
+            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+              <span>Editing:</span>{' '}
+              <span className="text-foreground">{editingLabel}</span>
               {loadingDetail ? ' · …' : null}
             </p>
           </div>
@@ -683,24 +686,24 @@ export default function ProductMasterPage() {
         </div>
 
         {fromStandards && product.code && (
-          <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-100 flex flex-wrap items-center justify-between gap-2">
+          <div className="mx-3 mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/25 bg-accent px-3 py-2 text-xs text-accent-foreground">
             <span>
               Complete remaining Product Master details for{' '}
               <span className="font-mono font-semibold">{product.code}</span> — grading rules use code
               &amp; description from here. You can close this tab when done; grading rules stay open in
               the other tab.
             </span>
-            <Link to="/standards" className="shrink-0 font-semibold underline hover:text-white">
+            <Link to="/standards" className="shrink-0 font-semibold text-primary underline hover:text-primary/80">
               Open grading rules
             </Link>
           </div>
         )}
 
-        <div className="pm-toolbar">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-            <span className="pm-toolbar-label">Open</span>
+        <div className="pm-toolbar px-3 py-2">
+          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto">
+            <span className="pm-toolbar-label shrink-0">Open</span>
             <select
-              className="pm-toolbar-field"
+              className="pm-toolbar-field pm-toolbar-field--open shrink-0"
               value={selectedId ?? ''}
               title="Pick a saved product to edit, or + New product for a blank form"
               onChange={(e) => {
@@ -716,14 +719,14 @@ export default function ProductMasterPage() {
                 </option>
               ))}
             </select>
-            <span className="pm-toolbar-meta">{total} saved</span>
+            <span className="pm-toolbar-meta shrink-0 whitespace-nowrap">{total} saved</span>
 
-            <span className="hidden sm:block w-px h-4 bg-slate-700 shrink-0" aria-hidden />
+            <span className="mx-0.5 hidden h-4 w-px shrink-0 bg-border sm:block" aria-hidden />
 
-            <span className="pm-toolbar-label">Find</span>
+            <span className="pm-toolbar-label shrink-0">Find</span>
             <input
-              className="pm-toolbar-field"
-              placeholder="Code, description, HS, alt code…"
+              className="pm-toolbar-field pm-toolbar-field--find shrink-0"
+              placeholder="Code, description, HS…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && loadList()}
@@ -731,7 +734,7 @@ export default function ProductMasterPage() {
             />
             <button
               type="button"
-              className="pm-toolbar-link inline-flex items-center gap-1"
+              className="pm-toolbar-link inline-flex shrink-0 items-center gap-1 whitespace-nowrap"
               onClick={loadList}
               disabled={loadingList}
             >
@@ -739,6 +742,7 @@ export default function ProductMasterPage() {
               search
             </button>
           </div>
+        </div>
         </div>
       </div>
 
@@ -1300,10 +1304,15 @@ export default function ProductMasterPage() {
           onClick={() => !exportBusy && setExportOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-xl"
+            className="relative w-full max-w-sm rounded-xl border border-slate-700 bg-slate-900 p-4 pt-11 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="pm-export-title" className="text-sm font-semibold text-slate-100">
+            <ModalCloseButton
+              onClick={() => setExportOpen(false)}
+              className="absolute right-3 top-3 z-10"
+              aria-label="Close export dialog"
+            />
+            <h3 id="pm-export-title" className="text-sm font-semibold text-slate-100 pr-10">
               Export / Print
             </h3>
             <p className="mt-1 text-[11px] text-slate-400">

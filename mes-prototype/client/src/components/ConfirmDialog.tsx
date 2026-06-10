@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef } from 'react';
+import ModalCloseButton from './ModalCloseButton';
 
 export type ConfirmDialogProps = {
   open: boolean;
@@ -56,11 +57,12 @@ export default function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 shadow-xl"
+        className="relative w-full max-w-md rounded-xl border border-slate-700 bg-slate-900 shadow-xl"
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <div className="p-5 border-b border-slate-800">
-          <h2 id={titleId} className="text-lg font-semibold text-slate-100">
+        <ModalCloseButton onClick={onCancel} className="absolute right-3 top-3 z-10" />
+        <div className="p-5 pt-4 border-b border-slate-800">
+          <h2 id={titleId} className="text-lg font-semibold text-slate-100 pr-10">
             {title}
           </h2>
           <p className="mt-2 text-sm text-slate-300 whitespace-pre-line">{message}</p>

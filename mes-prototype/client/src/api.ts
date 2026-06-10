@@ -103,7 +103,9 @@ export const api = {
     return request<Staff[]>(`/staff?${q}`);
   },
 
-  departments: () => request<string[]>('/departments'),
+  departments: () => request<Department[]>('/departments'),
+  createDepartment: (body: DepartmentInput) =>
+    request<Department>('/departments', { method: 'POST', body: JSON.stringify(body) }),
   activities: () => request<Activity[]>('/activities'),
   articles: (search?: string) => request<Article[]>(`/articles${search ? `?q=${encodeURIComponent(search)}` : ''}`),
   costCenters: (activity_id?: number) =>
@@ -185,6 +187,10 @@ export const api = {
   },
 
   activityMappings: () => request<ActivityMapping[]>('/activity-mappings'),
+  createActivity: (body: ActivityInput) =>
+    request<Activity>('/activities', { method: 'POST', body: JSON.stringify(body) }),
+  createCostCenter: (body: CostCenterInput) =>
+    request<CostCenter>('/cost-centers', { method: 'POST', body: JSON.stringify(body) }),
   addActivityMapping: (activity_id: number, cost_center_code: string) =>
     request<ActivityMapping>('/activity-mappings', {
       method: 'POST',
@@ -410,10 +416,31 @@ export interface Staff {
   is_active?: number;
 }
 
+export interface Department {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  is_active?: number;
+}
+
+export interface DepartmentInput {
+  code: string;
+  name: string;
+  description?: string;
+}
+
 export interface Activity {
   id: number;
   code: number;
   name: string;
+  description?: string;
+}
+
+export interface ActivityInput {
+  code: number;
+  name: string;
+  description?: string;
 }
 
 export interface Article {
@@ -426,6 +453,13 @@ export interface Article {
 export interface CostCenter {
   code: string;
   name: string;
+  description?: string;
+}
+
+export interface CostCenterInput {
+  code: string;
+  name: string;
+  description?: string;
 }
 
 export interface StandardProduct {

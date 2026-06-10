@@ -17,8 +17,8 @@ export function nextWorkflowStep(fields: {
 
 export function controlCls(floorMode: boolean, disabled = false) {
   const base = floorMode
-    ? 'w-full h-12 rounded-xl bg-slate-800 border border-slate-700 px-3 text-base'
-    : 'w-full h-10 rounded-lg bg-slate-800 border border-slate-700 px-3 text-sm';
+    ? 'w-full h-12 rounded-xl bg-slate-800 border border-slate-700 px-3 text-base text-slate-100 placeholder:text-slate-400'
+    : 'w-full h-10 rounded-lg bg-slate-800 border border-slate-700 px-3 text-sm text-slate-100 placeholder:text-slate-400';
   return `${base}${disabled ? ' opacity-50 cursor-not-allowed' : ''}`;
 }
 

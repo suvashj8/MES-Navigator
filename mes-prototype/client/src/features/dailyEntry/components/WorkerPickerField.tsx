@@ -85,7 +85,7 @@ export default function WorkerPickerField({
                 value={workerQuery}
                 onChange={(e) => setWorkerQuery(e.target.value)}
                 placeholder="Search reg #, name, department..."
-                className="w-full h-10 rounded-lg bg-slate-800 border border-slate-700 px-3 text-sm"
+                className="w-full h-10 rounded-lg bg-slate-800 border border-slate-700 px-3 text-sm text-slate-100 placeholder:text-slate-400"
                 autoFocus
               />
             </div>

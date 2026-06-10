@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { api, type AppUser, type UserInput } from '../api';
+import ModalCloseButton from '../components/ModalCloseButton';
 import PageShell from '../components/PageShell';
-
-const DEPTS = ['Production', 'Finishing', 'Packing', 'Quality Checker', 'Incharge', 'Sampling'];
 
 export default function Users() {
   const [users, setUsers] = useState<AppUser[]>([]);
+  const [deptOptions, setDeptOptions] = useState<string[]>([]);
   const [modal, setModal] = useState<'add' | 'edit' | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<UserInput & { is_active?: number }>({
@@ -17,7 +17,10 @@ export default function Users() {
     api.users().then(setUsers);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    api.departments().then((rows) => setDeptOptions(rows.map((d) => d.name)));
+  }, []);
 
   function openAdd() {
     setForm({ username: '', password: '', role: 'operator', display_name: '' });
@@ -109,8 +112,9 @@ export default function Users() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <form onSubmit={handleSave} className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-md space-y-3">
-            <h3 className="font-semibold">{modal === 'add' ? 'Add User' : 'Edit User'}</h3>
+          <form onSubmit={handleSave} className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 pt-12 w-full max-w-md space-y-3">
+            <ModalCloseButton onClick={() => setModal(null)} className="absolute right-4 top-4 z-10" />
+            <h3 className="font-semibold pr-10">{modal === 'add' ? 'Add User' : 'Edit User'}</h3>
             {modal === 'add' && (
               <Field label="Username" value={form.username} onChange={(v) => setForm({ ...form, username: v })} />
             )}
@@ -134,7 +138,11 @@ export default function Users() {
                   className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
                 >
                   <option value="">Select department...</option>
-                  {DEPTS.map((d) => <option key={d} value={d}>{d}</option>)}
+                  {deptOptions.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
                 </select>
               </div>
             )}

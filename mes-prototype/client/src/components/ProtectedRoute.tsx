@@ -13,7 +13,7 @@ export default function ProtectedRoute({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-400">
+      <div className="min-h-screen flex items-center justify-center text-slate-200">
         <div className="flex items-center gap-3">
           <Spinner className="h-5 w-5 text-amber-300" />
           <span className="text-sm">Loading…</span>

@@ -9,9 +9,11 @@ import { registerReportsRoutes } from './reports.js';
 import { registerDashboardRoutes } from './dashboard.js';
 import { registerMissingStandardsRoutes } from './missingStandards.js';
 import { registerUsersRoutes } from './users.js';
+import { registerDepartmentRoutes } from './departments.js';
 
 export function registerApiRoutes(app) {
   registerReferenceRoutes(app);
+  registerDepartmentRoutes(app);
   registerStaffRoutes(app);
   registerProductsRoutes(app);
   registerProductMasterRoutes(app);

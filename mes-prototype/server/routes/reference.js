@@ -1,7 +1,6 @@
 import { all } from '../db.js';
 import { asyncHandler } from '../asyncHandler.js';
 import { requirePermission } from '../middleware.js';
-import { resolveDepartment } from '../scope.js';
 import { adToBs, bsToAd, todayPair } from '../nepaliDate.js';
 
 export function registerReferenceRoutes(app) {
@@ -12,7 +11,9 @@ app.get('/api/nepali-date', asyncHandler(async (req, res) => {
   res.json(todayPair());
 }));
 app.get('/api/activities', requirePermission('reports:read'), asyncHandler(async (_, res) => {
-  res.json(await all('SELECT * FROM activities ORDER BY code', []));
+  res.json(
+    await all('SELECT id, code, name, COALESCE(description, \'\') AS description FROM activities ORDER BY code', [])
+  );
 }));
 
 // Articles ---
@@ -39,15 +40,11 @@ app.get('/api/cost-centers', requirePermission('reports:read'), asyncHandler(asy
       `, [activity_id])
     );
   }
-  res.json(await all('SELECT code, name FROM cost_centers ORDER BY name', []));
+  res.json(
+    await all(
+      'SELECT code, name, COALESCE(description, \'\') AS description FROM cost_centers ORDER BY name',
+      []
+    )
+  );
 }));
-app.get('/api/departments', requirePermission('reports:read'), asyncHandler(async (req, res) => {
-  const scope = resolveDepartment(req, req.query.department);
-  if (scope.locked && scope.department) {
-    return res.json([scope.department]);
-  }
-  const deptRows = await all('SELECT DISTINCT department FROM staff ORDER BY department', []);
-  res.json(deptRows.map((r) => r.department));
-}));
-
 }

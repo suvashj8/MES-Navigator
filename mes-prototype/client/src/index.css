@@ -1,7 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap");
 @import "tailwindcss";
 
+@theme inline {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+}
+
+/* FAM-aligned tokens; main panel uses --panel-background (requirement) */
+:root {
+  --panel-background: #f4f7f9;
+  --background: 210 20% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 160 84% 32%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 16% 93%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 16% 93%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 160 60% 94%;
+  --accent-foreground: 160 84% 22%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 20% 90%;
+  --input: 214 20% 90%;
+  --ring: 160 84% 32%;
+  --sidebar: 222 47% 9%;
+  --sidebar-foreground: 210 20% 96%;
+  --sidebar-accent: 222 40% 14%;
+  --sidebar-border: 222 30% 16%;
+}
+
+* {
+  @apply border-border;
+}
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  @apply bg-background text-foreground font-sans antialiased;
+  overflow-x: hidden;
+  min-height: 100dvh;
 }
 
 @keyframes skeleton-shimmer {
@@ -18,563 +89,217 @@ body {
   animation: skeleton-shimmer 1.35s ease-in-out infinite;
 }
 
-/* --- App component primitives (used across pages) --- */
-.card {
-  @apply rounded-2xl border border-slate-800 bg-slate-900/80;
-}
-
-.input {
-  @apply rounded-xl border border-slate-700/60 bg-slate-950/40 px-3 py-2 text-slate-100 placeholder:text-slate-500 outline-none;
-  @apply focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/20;
-}
-
-.input-sm {
-  @apply rounded-md border border-slate-700/60 bg-slate-950/40 px-2 py-1 text-xs text-slate-100 placeholder:text-slate-500 outline-none min-h-[26px];
-  @apply focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/20;
-}
-
-select.input-sm {
-  @apply pr-6;
-}
-
-.btn-sm {
-  @apply inline-flex items-center justify-center rounded-md border border-slate-700/60 bg-slate-900 px-2 py-1 text-xs font-medium text-slate-100 min-h-[26px];
-  @apply hover:bg-slate-800/70 disabled:opacity-50 disabled:pointer-events-none;
-}
-
-.pm-section {
-  @apply rounded-lg border border-slate-800 bg-slate-900/80 p-2.5;
-}
-
-.pm-section-title {
-  @apply text-[11px] font-semibold uppercase tracking-wide text-amber-200/80 border-b border-slate-800 pb-1 mb-2;
-}
-
-/* Product Master toolbar */
-.pm-toolbar {
-  @apply mt-1 rounded border border-slate-800/90 bg-slate-900/60 px-2 py-1.5;
-}
-
-.pm-toolbar-label {
-  @apply text-[10px] font-medium text-slate-500 shrink-0 leading-none;
-}
-
-.pm-toolbar-field {
-  @apply rounded-md border border-slate-700/60 bg-slate-950/40 px-2 text-xs text-slate-100 placeholder:text-slate-500 outline-none;
-  @apply focus:border-amber-400/70 focus:ring-1 focus:ring-amber-400/20;
-  @apply w-[14rem] max-w-full shrink-0 box-border;
-  height: 1.625rem;
-  min-height: 1.625rem;
-  padding-top: 0.125rem;
-  padding-bottom: 0.125rem;
-}
-
-select.pm-toolbar-field {
-  padding-right: 1.5rem;
-}
-
-.pm-toolbar-link {
-  @apply text-[10px] font-medium text-amber-400/90 hover:text-amber-300 hover:underline shrink-0 leading-none;
-  @apply bg-transparent border-0 p-0 min-h-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.pm-toolbar-meta {
-  @apply text-[10px] text-slate-500 whitespace-nowrap shrink-0 leading-none;
-}
-
-:root.theme-light .pm-toolbar {
-  @apply border-slate-300 bg-slate-50;
-}
-
-:root.theme-light .pm-toolbar-link {
-  color: var(--pm-mint-accent);
-}
-
-:root.theme-light .pm-toolbar-link:hover {
-  color: var(--pm-mint-accent-hover);
-}
-
-:root.theme-light .pm-toolbar-label,
-:root.theme-light .pm-toolbar-meta {
-  color: var(--pm-sage-500);
-}
-
-:root.theme-light .pm-section-title {
-  color: var(--pm-mint-accent);
-  border-color: rgb(156 184 173 / 0.55);
-}
-
-:root.theme-light .pm-toolbar-field {
-  @apply border-slate-300 bg-white text-slate-900;
-}
-
-select.input {
-  @apply pr-8;
-}
-
-.btn {
-  @apply inline-flex items-center justify-center rounded-xl border border-slate-700/60 bg-slate-900 px-3 py-2 text-sm font-medium text-slate-100;
-  @apply hover:bg-slate-800/70 active:translate-y-[0.5px] disabled:opacity-50 disabled:pointer-events-none;
-}
-
-.btn-primary {
-  @apply border-amber-500/40 bg-amber-500/15 text-amber-100 hover:bg-amber-500/20;
-}
-
-.table {
-  @apply border-separate border-spacing-0;
-}
-
-.table thead th {
-  @apply sticky top-0 bg-slate-900/95 backdrop-blur text-xs font-semibold uppercase tracking-wide text-slate-400;
-  @apply border-b border-slate-800 px-3 py-2;
-}
-
-.table tbody td {
-  @apply border-b border-slate-800 px-3 py-2 align-top;
-}
-
-.table tbody tr:hover td {
-  @apply bg-slate-900/60;
-}
-
-/* --- Light mode: black primary text, sage / pastel mint accents --- */
-:root.theme-light {
-  --mes-sidebar-bg: #0b1120;
-  --mes-main-bg: #ecfdf5;
-
-  --pm-text-primary: #0f172a;
-  --pm-sage-800: #2f4f44;
-  --pm-sage-700: #3d5f52;
-  --pm-sage-600: #4a6f5f;
-  --pm-sage-500: #5b7f6d;
-  --pm-sage-400: #6b9080;
-  --pm-mint-300: #7fa896;
-  --pm-mint-200: #9cb8ab;
-  --pm-mint-accent: #52796f;
-  --pm-mint-accent-hover: #3f6356;
-}
-
-:root.theme-light body {
-  /* Softer “daylight” theme (not pure white) */
-  @apply bg-slate-100;
-  color: var(--pm-text-primary);
-}
-
-:root.theme-light .card {
-  @apply border-slate-300 bg-white;
-}
-
-:root.theme-light .input {
-  @apply border-slate-300 bg-white text-slate-900;
-  @apply focus:border-amber-600/60 focus:ring-amber-600/15;
-}
-
-:root.theme-light .input::placeholder,
-:root.theme-light .input-sm::placeholder,
-:root.theme-light .pm-toolbar-field::placeholder {
-  color: var(--pm-mint-300) !important;
-}
-
-:root.theme-light .input-sm {
-  @apply border-slate-300 bg-white text-slate-900;
-}
-
-:root.theme-light .btn-sm {
-  @apply border-slate-300 bg-white text-slate-900 hover:bg-slate-50;
-}
-
-:root.theme-light .pm-section {
-  @apply border-slate-300 bg-white;
-}
-
-:root.theme-light .btn {
-  @apply border-slate-300 bg-white text-slate-900 hover:bg-slate-50;
-}
-
-:root.theme-light .btn-primary {
-  @apply border-amber-600/40 bg-amber-500/15 text-slate-900 hover:bg-amber-500/20;
-}
-
-:root.theme-light .table thead th {
-  @apply bg-white border-slate-200;
-  color: var(--pm-sage-600);
-}
-
-:root.theme-light .table tbody td {
-  @apply border-slate-200;
-}
-
-:root.theme-light .table tbody tr:hover td {
-  @apply bg-slate-50;
-}
-
-:root.theme-light .bg-slate-950 { background-color: rgb(241 245 249) !important; } /* slate-100 */
-:root.theme-light .bg-slate-900 { background-color: rgb(248 250 252) !important; } /* slate-50 */
-:root.theme-light .bg-slate-900\/80 { background-color: rgb(248 250 252 / 0.92) !important; }
-:root.theme-light .bg-slate-900\/95 { background-color: rgb(248 250 252 / 0.96) !important; }
-:root.theme-light .bg-slate-800 { background-color: rgb(226 232 240) !important; } /* slate-200 */
-:root.theme-light .bg-slate-800\/80 { background-color: rgb(255 255 255) !important; }
-:root.theme-light .bg-slate-800\/50 { background-color: rgb(226 232 240 / 0.7) !important; }
-:root.theme-light .bg-slate-800\/40 { background-color: rgb(226 232 240 / 0.6) !important; }
-
-:root.theme-light .mes-date-field {
-  background-color: rgb(255 255 255) !important;
-  border-color: rgb(148 163 184) !important;
-  color: var(--pm-text-primary) !important;
-}
-:root.theme-light .mes-date-field::placeholder {
-  color: var(--pm-sage-500) !important;
-}
-:root.theme-light .mes-date-bs-label {
-  color: var(--pm-sage-700) !important;
-}
-:root.theme-light .mes-date-bs-hint {
-  color: rgb(180 83 9) !important;
-  font-weight: 600;
-}
-:root.theme-light .mes-date-ad-hint {
-  color: var(--pm-sage-600) !important;
-}
-
-/* Bikram Sambat calendar popover */
-.mes-bs-cal-nav {
-  @apply h-7 w-7 rounded-md text-slate-400 hover:bg-slate-800 hover:text-amber-300 text-sm leading-none;
-}
-.mes-bs-cal-day {
-  @apply h-8 min-w-[2rem] rounded-md text-xs text-slate-200 hover:bg-slate-800 hover:text-amber-200;
-}
-.mes-bs-cal-day--selected {
-  @apply bg-amber-500/25 text-amber-200 font-semibold ring-1 ring-amber-500/50;
-}
-.mes-bs-cal-day--empty {
-  @apply pointer-events-none;
-}
-
-:root.theme-light .mes-bs-calendar {
-  background-color: rgb(255 255 255) !important;
-  border-color: rgb(148 163 184) !important;
-  box-shadow: 0 10px 25px rgb(15 23 42 / 0.12);
-}
-:root.theme-light .mes-bs-calendar .text-slate-200 {
-  color: var(--pm-text-primary) !important;
-}
-:root.theme-light .mes-bs-cal-nav {
-  color: var(--pm-sage-600) !important;
-}
-:root.theme-light .mes-bs-cal-nav:hover {
-  background-color: rgb(236 253 245) !important;
-  color: rgb(180 83 9) !important;
-}
-:root.theme-light .mes-bs-cal-day {
-  color: var(--pm-text-primary) !important;
-}
-:root.theme-light .mes-bs-cal-day:hover {
-  background-color: rgb(236 253 245) !important;
-  color: rgb(180 83 9) !important;
-}
-:root.theme-light .mes-bs-cal-day--selected {
-  background-color: rgb(253 230 138 / 0.5) !important;
-  color: rgb(146 64 14) !important;
-  ring-color: rgb(217 119 6 / 0.45);
-}
-
-:root.theme-light .bg-slate-950\/40 { background-color: rgb(248 250 252 / 0.75) !important; }
-:root.theme-light .bg-black\/60 { background-color: rgb(15 23 42 / 0.55) !important; }
-:root.theme-light .bg-black\/70 { background-color: rgb(15 23 42 / 0.6) !important; }
-
-/* Sidebar: must follow .bg-slate-900/80 override above (same specificity, later wins) */
-:root.theme-light aside.mes-app-sidebar {
-  background-color: var(--mes-sidebar-bg) !important;
-  border-color: rgb(30 41 59) !important;
-}
-
-/* Main content pane (right) — light green */
-:root.theme-light main.mes-app-main,
-:root.theme-light .mes-app-shell {
-  background-color: var(--mes-main-bg) !important;
-}
-
-:root.theme-light .mes-mobile-header {
-  background-color: rgb(236 253 245 / 0.95) !important;
-  border-color: rgb(167 243 208) !important;
-}
-
-/* Desktop shell: viewport ≥768px (matches Tailwind md + useLayoutMode) */
-@media (min-width: 768px) {
-  .mes-app-shell[data-layout='desktop'] .mes-app-sidebar {
-    display: flex !important;
-  }
-  .mes-app-shell[data-layout='desktop'] .mes-mobile-header,
-  .mes-app-shell[data-layout='desktop'] .mes-mobile-nav {
-    display: none !important;
-  }
-  .mes-app-shell[data-layout='desktop'] .mes-app-main {
-    padding-bottom: 0 !important;
+/* Right panel — matches fixed-asset AppLayout main (mesh-bg) */
+@layer utilities {
+  .mesh-bg {
+    background-color: var(--panel-background);
+    background-image:
+      radial-gradient(at 0% 0%, hsl(160 84% 32% / 0.08) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsl(199 89% 48% / 0.06) 0, transparent 45%),
+      radial-gradient(at 100% 100%, hsl(160 60% 40% / 0.05) 0, transparent 50%);
   }
 }
 
-/* Legible nav on dark sidebar */
-:root.theme-light .mes-app-sidebar .text-slate-300 {
-  color: rgb(203 213 225) !important;
-}
-:root.theme-light .mes-app-sidebar .text-slate-400,
-:root.theme-light .mes-app-sidebar .text-slate-500 {
-  color: rgb(148 163 184) !important;
-}
-:root.theme-light .mes-app-sidebar .text-slate-100,
-:root.theme-light .mes-app-sidebar .hover\:text-white:hover {
-  color: rgb(248 250 252) !important;
-}
-:root.theme-light .mes-app-sidebar .hover\:bg-slate-800:hover {
-  background-color: rgb(30 41 59) !important;
-}
-:root.theme-light .mes-app-sidebar h1 {
-  color: rgb(251 191 36) !important;
+/* Page wrapper (legacy PageShell) — same width rhythm as FAM PageShell */
+.mes-page {
+  @apply mx-auto w-full text-foreground;
 }
 
-:root.theme-light .mes-app-sidebar .text-amber-400,
-:root.theme-light .mes-app-sidebar .text-amber-300 {
-  color: rgb(251 191 36) !important;
+.mes-page :is(h1, h2, h3, h4) {
+  @apply text-foreground;
 }
 
-:root.theme-light .mes-app-sidebar .text-amber-400\/80 {
-  color: rgb(251 191 36 / 0.85) !important;
-}
-:root.theme-light .mes-app-sidebar .text-sky-400,
-:root.theme-light .mes-app-sidebar .text-sky-400\/80 {
-  color: rgb(56 189 248) !important;
+.floor-label {
+  @apply text-sm font-semibold uppercase tracking-wide text-muted-foreground;
 }
 
-:root.theme-light .border-slate-800 { border-color: rgb(148 163 184) !important; } /* slate-400 */
-:root.theme-light .mes-app-sidebar.border-slate-800 {
-  border-color: rgb(30 41 59) !important;
-}
-:root.theme-light .border-slate-700 { border-color: rgb(148 163 184) !important; }
-:root.theme-light .border-slate-700\/50 { border-color: rgb(148 163 184 / 0.75) !important; }
-
-/* Primary UI copy stays black */
-:root.theme-light .text-slate-100,
-:root.theme-light .text-slate-200,
-:root.theme-light .text-slate-900 {
-  color: var(--pm-text-primary) !important;
-}
-
-/* Secondary / muted copy → sage & pastel mint */
-:root.theme-light .text-slate-300 { color: var(--pm-sage-600) !important; }
-:root.theme-light .text-slate-400 { color: var(--pm-sage-500) !important; }
-:root.theme-light .text-slate-500 { color: var(--pm-sage-400) !important; }
-:root.theme-light .text-slate-600 { color: var(--pm-sage-600) !important; }
-:root.theme-light .text-slate-700 { color: var(--pm-sage-700) !important; }
-
-:root.theme-light .text-amber-200,
-:root.theme-light .text-amber-200\/80,
-:root.theme-light .text-amber-300,
-:root.theme-light .text-amber-400 {
-  color: var(--pm-mint-accent) !important;
-}
-
-/* Faded accent text (dark mode tints) → solid readable colors on light backgrounds */
-:root.theme-light .mes-app-sidebar .text-amber-400\/80 {
-  color: rgb(251 191 36 / 0.85) !important;
-}
-:root.theme-light .text-amber-200\/90 {
-  color: rgb(146 64 14) !important;
-}
-:root.theme-light .text-amber-400\/80 {
-  color: rgb(180 83 9) !important;
-}
-:root.theme-light .text-red-400\/80 {
-  color: rgb(185 28 28) !important;
-}
-:root.theme-light .text-orange-400\/80 {
-  color: rgb(194 65 12) !important;
-}
-:root.theme-light .text-emerald-400\/80 {
-  color: rgb(4 120 87) !important;
-}
-
-.mes-prod-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.mes-entries-table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-.mes-entries-table thead th:first-child,
-.mes-entries-table tbody td:first-child {
-  padding-left: 1.25rem;
-}
-.mes-entries-table thead th:last-child,
-.mes-entries-table tbody td:last-child {
-  padding-right: 1.25rem;
-}
-
-:root.theme-light .mes-entries-table tbody td.border-r {
-  border-color: rgb(203 213 225 / 0.65) !important;
-}
-
-/* Grade badges (C/B need stronger text in light mode) */
-.mes-grade-badge {
-  @apply border font-bold;
-}
-.mes-grade-badge--c {
-  @apply bg-red-500/20 text-red-300 border-red-500/40;
-}
-.mes-grade-badge--b {
-  @apply bg-orange-500/20 text-orange-300 border-orange-500/40;
-}
-.mes-grade-badge--a {
-  @apply bg-emerald-500/20 text-emerald-300 border-emerald-500/40;
-}
-.mes-grade-badge--aa {
-  @apply bg-amber-500/20 text-amber-200 border-amber-400/50;
-}
-
-:root.theme-light .mes-grade-badge--c {
-  background-color: rgb(254 226 226) !important;
-  border-color: rgb(252 165 165) !important;
-  color: rgb(153 27 27) !important;
-}
-:root.theme-light .mes-grade-badge--b {
-  background-color: rgb(255 237 213) !important;
-  border-color: rgb(253 186 116) !important;
-  color: rgb(154 52 18) !important;
-}
-:root.theme-light .mes-grade-badge--a {
-  background-color: rgb(209 250 229) !important;
-  border-color: rgb(110 231 183) !important;
-  color: rgb(4 120 87) !important;
-}
-:root.theme-light .mes-grade-badge--aa {
-  background-color: rgb(254 243 199) !important;
-  border-color: rgb(252 211 77) !important;
-  color: rgb(146 64 14) !important;
-}
-
-:root.theme-light .text-amber-700,
-:root.theme-light .text-amber-800 {
-  color: var(--pm-mint-accent-hover) !important;
-}
-
-:root.theme-light .text-sky-400,
-:root.theme-light .text-sky-400\/80 {
-  color: var(--pm-sage-500) !important;
-}
-
-:root.theme-light .floor-label {
-  color: var(--pm-sage-500);
-}
-
-:root.theme-light .floor-card { border-color: rgb(148 163 184 / 0.75) !important; }
-
-/* Notice / callout boxes — dark text on tinted panels in light mode */
+/* Alerts on light panel (FAM-style) */
 .mes-notice-sky {
-  border: 1px solid rgb(14 165 233 / 0.35);
-  background-color: rgb(14 165 233 / 0.12);
-  color: rgb(224 242 254);
+  @apply rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950;
 }
-.mes-notice-sky .mes-notice-muted {
-  color: rgb(186 230 253 / 0.92);
+
+.mes-notice-muted {
+  @apply text-sky-800;
 }
 
 .mes-notice-emerald {
-  border: 1px solid rgb(16 185 129 / 0.3);
-  background-color: rgb(16 185 129 / 0.12);
-  color: rgb(209 250 229);
-}
-.mes-notice-emerald .mes-notice-muted {
-  color: rgb(167 243 208 / 0.95);
+  @apply rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-950;
 }
 
 .mes-notice-amber {
-  border: 1px solid rgb(245 158 11 / 0.4);
-  background-color: rgb(245 158 11 / 0.12);
-  color: rgb(254 243 199);
-}
-.mes-notice-amber .mes-notice-muted {
-  color: rgb(253 230 138 / 0.95);
+  @apply rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950;
 }
 
 .mes-notice-rose {
-  border: 1px solid rgb(244 63 94 / 0.35);
-  background-color: rgb(244 63 94 / 0.12);
-  color: rgb(255 228 230);
-}
-.mes-notice-rose .mes-notice-muted {
-  color: rgb(254 205 211 / 0.95);
+  @apply rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-950;
 }
 
-:root.theme-light .mes-notice-sky {
-  border-color: rgb(2 132 199 / 0.5) !important;
-  background-color: rgb(224 242 254) !important;
-  color: rgb(12 74 110) !important;
-}
-:root.theme-light .mes-notice-sky .mes-notice-muted {
-  color: rgb(7 89 133) !important;
-}
-:root.theme-light .mes-notice-sky a {
-  color: rgb(3 105 161) !important;
-  font-weight: 600;
+/* Modal close — always high-contrast (not overridden by legacy slate bridge) */
+.mes-modal-close {
+  @apply border-border bg-background text-foreground hover:bg-muted;
 }
 
-:root.theme-light .mes-notice-emerald {
-  border-color: rgb(5 150 105 / 0.45) !important;
-  background-color: rgb(209 250 229) !important;
-  color: rgb(6 78 59) !important;
-}
-:root.theme-light .mes-notice-emerald .mes-notice-muted {
-  color: rgb(4 120 87) !important;
-}
-
-:root.theme-light .mes-notice-amber {
-  border-color: rgb(217 119 6 / 0.45) !important;
-  background-color: rgb(254 243 199) !important;
-  color: rgb(120 53 15) !important;
-}
-:root.theme-light .mes-notice-amber .mes-notice-muted {
-  color: rgb(146 64 14) !important;
-}
-:root.theme-light .mes-notice-amber a {
-  color: rgb(180 83 9) !important;
-  font-weight: 600;
+/*
+ * Legacy MES markup (slate-900 cards, amber accents) → FAM light surfaces inside main panel only.
+ * Logic/classes in TSX unchanged; appearance matches fixed-asset/frontend.
+ */
+.mesh-bg .mes-page :is(
+    .bg-slate-900,
+    .bg-slate-900\/80,
+    .bg-slate-950,
+    .bg-slate-950\/40,
+    .bg-slate-950\/60,
+    .bg-slate-950\/85,
+    .bg-slate-950\/98,
+    .card
+  ) {
+  @apply border-border bg-card text-card-foreground shadow-sm;
 }
 
-:root.theme-light .mes-notice-rose {
-  border-color: rgb(225 29 72 / 0.4) !important;
-  background-color: rgb(255 228 230) !important;
-  color: rgb(136 19 55) !important;
-}
-:root.theme-light .mes-notice-rose .mes-notice-muted {
-  color: rgb(159 18 57) !important;
-}
-:root.theme-light .mes-notice-rose label {
-  color: rgb(136 19 55) !important;
+.mesh-bg .mes-page :is(.bg-slate-800, .bg-slate-800\/50, .bg-slate-800\/40) {
+  @apply border-border bg-muted/40 text-foreground;
 }
 
-.safe-pb {
-  padding-bottom: env(safe-area-inset-bottom, 0);
+.mesh-bg .mes-page .border-slate-800,
+.mesh-bg .mes-page .border-slate-700,
+.mesh-bg .mes-page .border-slate-600 {
+  @apply border-border;
 }
 
-@keyframes toast-in {
-  from {
-    opacity: 0;
-    transform: translateY(-0.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.mesh-bg .mes-page .text-slate-100,
+.mesh-bg .mes-page .text-slate-200,
+.mesh-bg .mes-page .text-slate-300 {
+  @apply text-foreground;
 }
 
-@keyframes entry-flash {
-  0%,
-  100% {
-    background-color: transparent;
-  }
-  30% {
-    background-color: rgb(6 78 59 / 0.35);
+.mesh-bg .mes-page .text-slate-400,
+.mesh-bg .mes-page .text-slate-500 {
+  @apply text-muted-foreground;
+}
+
+.mesh-bg .mes-page .text-amber-300,
+.mesh-bg .mes-page .text-amber-400,
+.mesh-bg .mes-page .text-amber-200\/80,
+.mesh-bg .mes-page .text-amber-400\/90,
+.mesh-bg .mes-page .text-amber-400\/80 {
+  @apply text-primary;
+}
+
+.mesh-bg .mes-page .mes-prod-code {
+  @apply font-mono text-sm font-semibold text-foreground;
+}
+
+.mesh-bg .mes-date-ad-hint,
+.mesh-bg .mes-date-bs-hint,
+.mesh-bg .mes-date-nepal-time {
+  @apply font-medium text-primary;
+}
+
+.mesh-bg .mes-page .bg-amber-500 {
+  @apply bg-primary text-primary-foreground hover:opacity-90;
+}
+
+.mesh-bg .mes-page .bg-amber-500\/10,
+.mesh-bg .mes-page .bg-amber-500\/15,
+.mesh-bg .mes-page .border-amber-500\/30,
+.mesh-bg .mes-page .border-amber-500\/40 {
+  @apply border-primary/25 bg-accent text-accent-foreground;
+}
+
+.mesh-bg .mes-page .hover\:bg-slate-800:hover,
+.mesh-bg .mes-page .hover\:bg-slate-800\/70:hover {
+  @apply hover:bg-muted;
+}
+
+/* Form controls — FAM Input look (Product Master + legacy pages) */
+.mesh-bg .input,
+.mesh-bg .input-sm,
+.mesh-bg .pm-toolbar-field,
+.mesh-bg .mes-page input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.mesh-bg .mes-page select,
+.mesh-bg .mes-page textarea {
+  @apply rounded-lg border border-input bg-background text-foreground shadow-sm outline-none;
+  @apply placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30;
+}
+
+.mesh-bg .input-sm,
+.mesh-bg .mes-page input.h-10,
+.mesh-bg .mes-page select.h-10 {
+  @apply min-h-10 text-sm;
+}
+
+.mesh-bg .pm-toolbar-field {
+  @apply min-h-8 text-xs;
+}
+
+.mesh-bg .btn-sm,
+.mesh-bg .mes-page .btn-sm {
+  @apply inline-flex min-h-9 items-center justify-center rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground shadow-sm;
+  @apply hover:bg-muted disabled:pointer-events-none disabled:opacity-50;
+}
+
+.mesh-bg .btn,
+.mesh-bg .mes-page .btn {
+  @apply inline-flex items-center justify-center rounded-lg border border-input bg-background px-3 py-2 text-sm font-medium text-foreground shadow-sm;
+  @apply hover:bg-muted disabled:pointer-events-none disabled:opacity-50;
+}
+
+.mesh-bg .btn-primary,
+.mesh-bg .mes-page .border-amber-500\/40.bg-amber-500\/15 {
+  @apply border-primary/30 bg-primary/10 text-primary hover:bg-primary/15;
+}
+
+/* Product Master — FAM Card sections */
+.mesh-bg .pm-section {
+  @apply rounded-xl border border-border bg-card p-4 text-card-foreground shadow-sm;
+}
+
+.mesh-bg .pm-section-title {
+  @apply mb-3 border-b border-border pb-2 text-xs font-semibold uppercase tracking-wide text-primary;
+}
+
+.mesh-bg .pm-toolbar {
+  @apply mt-0 rounded-none border-0 bg-transparent p-0 shadow-none;
+}
+
+.mesh-bg .pm-toolbar-label,
+.mesh-bg .pm-toolbar-meta {
+  @apply text-muted-foreground;
+}
+
+.mesh-bg .pm-toolbar-link {
+  @apply text-primary hover:text-primary/80 hover:underline;
+}
+
+.mesh-bg .pm-toolbar-field {
+  @apply h-8 min-h-8 max-h-8 py-0 text-xs;
+}
+
+.mesh-bg .pm-toolbar-field--open {
+  width: 10.5rem;
+  max-width: min(10.5rem, 34vw);
+}
+
+.mesh-bg .pm-toolbar-field--find {
+  width: 8rem;
+  max-width: min(8rem, 26vw);
+}
+
+.mesh-bg .table thead th {
+  @apply border-b border-border bg-muted/60 text-xs font-semibold uppercase tracking-wide text-muted-foreground;
+}
+
+.mesh-bg .table tbody td {
+  @apply border-b border-border text-foreground;
+}
+
+.mesh-bg .table tbody tr:hover td {
+  @apply bg-muted/40;
+}
+
+@media (max-width: 767px) {
+  .floor-card {
+    @apply rounded-xl border border-border bg-card p-4 shadow-sm;
   }
 }
 
@@ -587,7 +312,9 @@ select.input {
     visibility: hidden;
   }
   #pm-print-area,
-  #pm-print-area * {
+  #pm-print-area *,
+  #scorecard-print-area,
+  #scorecard-print-area * {
     visibility: visible;
   }
   #pm-print-area {
@@ -597,6 +324,34 @@ select.input {
     width: 100%;
     margin: 0;
     padding: 0.75rem 1rem;
+  }
+  #scorecard-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none !important;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: white !important;
+    color: black !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #scorecard-print-area table {
+    min-width: 0 !important;
+    width: 100% !important;
+    font-size: 10px;
+  }
+  #scorecard-print-area th,
+  #scorecard-print-area td {
+    padding: 0.25rem 0.5rem !important;
+    border: 1px solid #cbd5e1 !important;
+    color: black !important;
+    vertical-align: top;
+  }
+  #scorecard-print-area .text-primary {
+    color: #0f172a !important;
   }
   .pm-action-footer {
     display: none !important;
@@ -612,7 +367,7 @@ select.input {
     page-break-inside: avoid;
   }
   #pm-form .pm-section-title {
-    color: #92400e !important;
+    color: #047857 !important;
     border-color: #e2e8f0 !important;
   }
   #pm-form .input-sm,
@@ -622,21 +377,5 @@ select.input {
     color: black !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-  #pm-form span.text-slate-500,
-  #pm-form .text-slate-500 {
-    color: #475569 !important;
-  }
-}
-
-@media (max-width: 767px) {
-  .floor-input {
-    @apply text-lg py-3.5 min-h-[48px] rounded-xl;
-  }
-  .floor-label {
-    @apply text-xs font-semibold uppercase tracking-wide text-slate-400;
-  }
-  .floor-card {
-    @apply rounded-2xl border border-slate-700/50 bg-slate-900 p-4;
   }
 }

@@ -26,13 +26,13 @@ export default function FormField({
   reserveSubtitleLine,
   required,
   hint,
-  hintClassName = 'text-amber-400/80',
+  hintClassName = 'text-amber-300',
   className = '',
   floorMode,
   highlight,
   children,
 }: Props) {
-  const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-400 uppercase';
+  const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-300 uppercase';
   const highlightRing = highlight
     ? '[&_select]:border-amber-500 [&_select]:ring-2 [&_select]:ring-amber-500/35 [&_input]:border-amber-500 [&_input]:ring-2 [&_input]:ring-amber-500/35'
     : '';
@@ -52,7 +52,7 @@ export default function FormField({
         {reserveLine && (
           <span
             className={`block text-[10px] font-normal normal-case mt-0.5 leading-tight ${
-              shouldShowSubtitle && nepali ? 'text-slate-500' : 'invisible select-none'
+              shouldShowSubtitle && nepali ? 'text-slate-300' : 'invisible select-none'
             }`}
             aria-hidden={!(shouldShowSubtitle && nepali)}
           >

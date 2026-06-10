@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, type StandardProduct, type Staff } from '../api';
+import ModalCloseButton from './ModalCloseButton';
 import { useAuth } from '../hooks/useAuth';
 
 type NavAction = { id: string; label: string; hint?: string; to: string };
@@ -116,14 +117,15 @@ export default function CommandPalette({ open, onClose, initialQuery = '', navAc
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="absolute left-1/2 top-20 w-[min(720px,calc(100vw-2rem))] -translate-x-1/2">
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
-          <div className="p-3 border-b border-slate-800">
+        <div className="relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+          <ModalCloseButton onClick={onClose} className="absolute right-2 top-2 z-10" />
+          <div className="p-3 pr-12 border-b border-slate-800">
             <input
               ref={inputRef}
               value={q}
               onChange={(e) => { setQ(e.target.value); setActiveIndex(0); }}
               placeholder="Search: worker / reg # / product…"
-              className="w-full h-11 rounded-xl bg-slate-800 border border-slate-700 px-3 text-sm"
+              className="w-full h-11 rounded-xl bg-slate-800 border border-slate-700 px-3 text-sm text-slate-100 placeholder:text-slate-400"
             />
             <p className="text-[11px] text-slate-500 mt-2">
               Tip: type a reg # or worker name · Enter to open · Esc to close

@@ -82,7 +82,7 @@ export default function Dashboard() {
                 }
               }}
               placeholder="Search worker / reg # / product…"
-              className="flex-1 h-10 rounded-xl bg-slate-800 border border-slate-700 px-3 text-sm"
+              className="flex-1 h-10 rounded-xl bg-slate-800 border border-slate-700 px-3 text-sm text-slate-100 placeholder:text-slate-400"
             />
             <button
               type="button"
@@ -94,7 +94,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('mes:openPalette', { detail: { q: '' } }))}
-              className="h-10 px-3 rounded-xl border border-slate-700 text-slate-300 text-sm hover:bg-slate-800"
+              className="h-10 px-3 rounded-xl border border-slate-600 bg-white text-slate-800 text-sm hover:bg-slate-100"
               title="Open command palette"
             >
               Ctrl+K

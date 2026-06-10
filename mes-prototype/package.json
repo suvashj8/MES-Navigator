@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n api,ui -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "sync:dev-env": "node scripts/sync-dev-env.mjs",
+    "db:docker": "npm run sync:dev-env && docker compose --env-file .env.docker up -d mes-postgres",
+    "db:docker:down": "docker compose down",
+    "db:restore": "npm run sync:dev-env && npm run db:docker && npm run db:restore --prefix server",
+    "dev": "npm run sync:dev-env && concurrently -n api,ui -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run dev --prefix server",
     "dev:ui": "npm run dev --prefix client",

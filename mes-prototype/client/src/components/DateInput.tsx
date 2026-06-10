@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import NepaliDatePicker from './NepaliDatePicker';
-import { formatAdDisplay } from '../utils/formatDateTime';
+import { formatAdDisplay, formatNepalTimeNow } from '../utils/formatDateTime';
 
 type Props = {
   label?: string;
@@ -31,6 +31,12 @@ export default function DateInput({
 }: Props) {
   const [bs, setBs] = useState('');
   const [bsDisplay, setBsDisplay] = useState('');
+  const [nepalTime, setNepalTime] = useState(() => formatNepalTimeNow());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNepalTime(formatNepalTimeNow()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (!value) return;
@@ -60,11 +66,12 @@ export default function DateInput({
   const pad = large || floorMode ? 'px-4' : 'px-3';
   const inputCls = `mes-date-field w-full ${h} ${rounded} ${pad} ${text} bg-slate-800 border border-slate-700 text-slate-100 placeholder:text-slate-500`;
   const bsInputCls = `mes-date-field ${h} bg-slate-800 border border-slate-700 ${rounded} px-2 text-xs text-slate-100 placeholder:text-slate-500`;
-  const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-400 uppercase';
+  const lblCls = floorMode ? 'floor-label' : 'text-xs text-slate-300 uppercase';
   const shouldShowSubtitle = showSubtitle ?? Boolean(floorMode);
   const reserveLine = reserveSubtitleLine ?? shouldShowSubtitle;
   const adHint = formatAdDisplay(value);
   const hintCls = 'text-[10px] leading-4 h-4 mt-1 truncate';
+  const nepalTimeCls = 'mes-date-nepal-time text-[10px] leading-4 mt-0.5 truncate text-primary font-medium';
 
   if (aligned) {
     return (
@@ -96,7 +103,7 @@ export default function DateInput({
               className={`${inputCls} min-w-0 w-full ${floorMode ? 'min-h-12' : 'min-h-10'}`}
               title="Gregorian (AD)"
             />
-            <p className={`mes-date-ad-hint ${hintCls} ${adHint ? 'text-slate-400' : 'invisible select-none'}`}>
+            <p className={`mes-date-ad-hint ${hintCls} ${adHint ? 'text-amber-300' : 'invisible select-none'}`}>
               {adHint || '\u00a0'}
             </p>
           </div>
@@ -109,8 +116,11 @@ export default function DateInput({
               placeholder="YYYY-MM-DD (BS)"
               title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
             />
-            <p className={`mes-date-bs-hint ${hintCls} ${bsDisplay ? 'text-amber-400/80' : 'invisible select-none'}`}>
+            <p className={`mes-date-bs-hint ${hintCls} ${bsDisplay ? 'text-amber-300' : 'invisible select-none'}`}>
               {bsDisplay || '\u00a0'}
+            </p>
+            <p className={nepalTimeCls} aria-live="polite">
+              {nepalTime}
             </p>
           </div>
         </div>
@@ -129,7 +139,7 @@ export default function DateInput({
         title="Gregorian (AD)"
       />
       <div className="mt-2">
-        <span className="mes-date-bs-label text-[10px] font-semibold text-slate-400 uppercase tracking-wide">BS</span>
+        <span className="mes-date-bs-label text-[10px] font-semibold text-slate-300 uppercase tracking-wide">BS</span>
         <NepaliDatePicker
           value={bs}
           onChange={(v) => void applyBs(v)}
@@ -139,8 +149,11 @@ export default function DateInput({
           title={bsDisplay || 'Nepali (Bikram Sambat) calendar'}
         />
         {bsDisplay && (
-          <p className="mes-date-bs-hint text-xs font-medium text-amber-400/80 mt-1">{bsDisplay}</p>
+          <p className="mes-date-bs-hint text-xs font-medium text-amber-300 mt-1">{bsDisplay}</p>
         )}
+        <p className={`${nepalTimeCls} ${bsDisplay ? '' : 'mt-1'}`} aria-live="polite">
+          {nepalTime}
+        </p>
       </div>
     </div>
   );

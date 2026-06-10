@@ -1,5 +1,14 @@
 -- MES Prototype PostgreSQL schema (matches application models)
 
+CREATE TABLE IF NOT EXISTS departments (
+  id SERIAL PRIMARY KEY,
+  code TEXT UNIQUE NOT NULL,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT DEFAULT '',
+  is_active INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS staff (
   id SERIAL PRIMARY KEY,
   reg_no INTEGER UNIQUE NOT NULL,
@@ -13,7 +22,8 @@ CREATE TABLE IF NOT EXISTS staff (
 CREATE TABLE IF NOT EXISTS activities (
   id SERIAL PRIMARY KEY,
   code INTEGER UNIQUE NOT NULL,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  description TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS articles (
@@ -25,7 +35,8 @@ CREATE TABLE IF NOT EXISTS articles (
 
 CREATE TABLE IF NOT EXISTS cost_centers (
   code TEXT PRIMARY KEY,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  description TEXT DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS activity_cost_center_maps (

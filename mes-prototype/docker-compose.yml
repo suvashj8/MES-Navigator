@@ -1,0 +1,23 @@
+# Dev database for MES — port from dev-ports.json (npm run sync:dev-env).
+# Start: npm run db:docker   (from mes-prototype/)
+services:
+  mes-postgres:
+    image: postgres:16-alpine
+    container_name: mes-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${MES_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MES_DB_PASSWORD:-mes_dev_123}
+      POSTGRES_DB: ${MES_DB_NAME:-mes_prototype}
+    ports:
+      - "${MES_DB_PORT:-55437}:5432"
+    volumes:
+      - mes_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mes_prototype"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mes_pg_data:

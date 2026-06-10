@@ -15,7 +15,7 @@ export function useDailyEntryScope(search: string) {
   const [staffList, setStaffList] = useState<Staff[]>([]);
 
   useEffect(() => {
-    api.departments().then(setDepartments);
+    api.departments().then((rows) => setDepartments(rows.map((d) => d.name)));
     api.activities().then(setActivities);
     api.scope().then((s) => {
       if (s.locked && s.department) {

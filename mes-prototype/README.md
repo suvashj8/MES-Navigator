@@ -95,7 +95,7 @@ npm run dev
 
 If login shows “API is restarting”, wait until the API terminal prints `MES API running on http://localhost:3001` and try again (the client auto-retries once after 2s).
 
-- **UI:** http://localhost:5173  
+- **UI:** http://localhost:5174  
 - **API:** http://localhost:3001  
 
 ## Database

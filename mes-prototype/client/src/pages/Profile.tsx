@@ -56,18 +56,18 @@ export default function Profile() {
         <div>
           <label className="text-xs text-slate-400 uppercase">Display Name</label>
           <input value={displayName} onChange={(e) => setDisplayName(e.target.value)}
-            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2" required />
+            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-400" required />
         </div>
         <div>
           <label className="text-xs text-slate-400 uppercase">New Password</label>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="Leave blank to keep current"
-            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2" />
+            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-400" />
         </div>
         <div>
           <label className="text-xs text-slate-400 uppercase">Confirm Password</label>
           <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)}
-            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2" />
+            className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 placeholder:text-slate-400" />
         </div>
         {error && <p className="text-red-400 text-sm">{error}</p>}
         {message && <p className="text-emerald-400 text-sm">{message}</p>}

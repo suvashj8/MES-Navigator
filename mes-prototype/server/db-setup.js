@@ -47,22 +47,28 @@ async function setupDatabase() {
     await adminPool.query('SELECT NOW()');
     console.log('? Connected to PostgreSQL server');
 
-    // Step 2: Drop existing database if it exists
+    // Step 2: Create database (never drop unless --force — use npm run db:restore to reload dev data)
+    const force = process.argv.includes('--force');
     console.log(`\nStep 2: Checking for existing database "${DB_NAME}"...`);
-    try {
-      await adminPool.query(`DROP DATABASE IF EXISTS ${DB_NAME};`);
-      console.log(`? Dropped existing database "${DB_NAME}"`);
-    } catch (error) {
-      console.log(`? Database "${DB_NAME}" did not exist`);
+    const existsRes = await adminPool.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME]);
+    const exists = existsRes.rowCount > 0;
+
+    if (exists && !force) {
+      console.log(`? Database "${DB_NAME}" already exists — keeping data (pass --force to wipe and recreate).`);
+      console.log('  To reload dev data: npm run db:restore');
+    } else if (exists && force) {
+      await adminPool.query(`DROP DATABASE ${DB_NAME};`);
+      console.log(`? Dropped existing database "${DB_NAME}" (--force)`);
+      await adminPool.query(`CREATE DATABASE ${DB_NAME};`);
+      console.log(`? Created database "${DB_NAME}"`);
+    } else {
+      console.log(`\nStep 3: Creating new database "${DB_NAME}"...`);
+      await adminPool.query(`CREATE DATABASE ${DB_NAME};`);
+      console.log(`? Created database "${DB_NAME}"`);
     }
 
-    // Step 3: Create new database
-    console.log(`\nStep 3: Creating new database "${DB_NAME}"...`);
-    await adminPool.query(`CREATE DATABASE ${DB_NAME};`);
-    console.log(`? Created database "${DB_NAME}"`);
-
-    // Step 4: Connect to the new database
-    console.log(`\nStep 4: Connecting to new database...`);
+    // Step 3/4: Connect to the application database
+    console.log(`\nConnecting to database "${DB_NAME}"...`);
     appPool = new Pool({
       host: DB_HOST,
       port: DB_PORT,

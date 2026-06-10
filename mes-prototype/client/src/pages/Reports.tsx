@@ -55,7 +55,7 @@ export default function Reports() {
   }, [period, anchor, gradeFilter, navigate, location.search]);
 
   useEffect(() => {
-    api.departments().then(setDepartments);
+    api.departments().then((rows) => setDepartments(rows.map((d) => d.name)));
     api.scope().then((s) => {
       if (s.locked && s.department) {
         setDepartment(s.department);
@@ -196,14 +196,14 @@ export default function Reports() {
         {period === 'custom' ? (
           <>
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm" />
+              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400" />
             <span className="self-center text-slate-500">to</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm" />
+              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400" />
           </>
         ) : (
           <input type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
+            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400"
             title={period === 'weekly' ? 'Any day in the week' : 'Any day in the month'} />
         )}
         <select value={department} onChange={(e) => setDepartment(e.target.value)}

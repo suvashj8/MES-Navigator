@@ -9,6 +9,7 @@
     "import:sheet3": "node scripts/import-product-master-sheet3.js",
     "import:sheet3:replace": "node scripts/import-product-master-sheet3.js --replace",
     "db:setup": "node db-setup.js",
+    "db:restore": "node scripts/migrate-sqlite-to-postgres.js --sqlite-path ./mes.db.migrated.bak --keep-sqlite",
     "migrate:from-sqlite": "node scripts/migrate-sqlite-to-postgres.js",
     "migrate:from-sqlite:dry": "node scripts/migrate-sqlite-to-postgres.js --dry-run",
     "cleanup:legacy-sqlite": "node scripts/cleanup-legacy-sqlite.js",

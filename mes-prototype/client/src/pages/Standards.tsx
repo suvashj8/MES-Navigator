@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { api, type GradingStandard, type ProductMasterListRow, type StandardInput, type CostCenter } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
+import ModalCloseButton from '../components/ModalCloseButton';
 import PageShell from '../components/PageShell';
 import {
   blockNegativeNumberKey,
@@ -442,7 +443,7 @@ export default function Standards() {
         placeholder="Search product code, name, or work station..."
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        className="w-full max-w-md xl:max-w-xl bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-6"
+        className="w-full max-w-md xl:max-w-xl bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 mb-6"
       />
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
@@ -485,20 +486,20 @@ export default function Standards() {
               row.kind === 'rule' ? (
                 <tr key={`rule-${row.rule.id}`} className="border-t border-slate-800 hover:bg-slate-900/40">
                   <td className="p-2 align-top">
-                    <p className="text-[10px] uppercase tracking-wide text-slate-600 mb-0.5">Code</p>
-                    <span className="mes-prod-code text-amber-200/90">{row.rule.prod_code}</span>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">Code</p>
+                    <span className="mes-prod-code font-mono text-sm font-semibold text-foreground">{row.rule.prod_code}</span>
                     {!row.rule.in_product_master && (
                       <span className="ml-1 text-[10px] uppercase text-rose-400 font-semibold">Unlinked</span>
                     )}
-                    <p className="text-[10px] uppercase tracking-wide text-slate-600 mt-1.5 mb-0.5">Description</p>
-                    <p className="text-slate-300 truncate">{row.rule.master_description || row.rule.prod_name}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1.5 mb-0.5">Description</p>
+                    <p className="text-foreground truncate">{row.rule.master_description || row.rule.prod_name}</p>
                     {row.rule.master_base_uom && (
-                      <p className="text-[10px] text-slate-600 mt-1">UOM: {row.rule.master_base_uom}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">UOM: {row.rule.master_base_uom}</p>
                     )}
                   </td>
                   <td className="p-2 align-top">
-                    <span className="font-mono">{row.rule.cost_center_code}</span>
-                    <p className="text-slate-500 truncate">{row.rule.cost_center_name}</p>
+                    <span className="font-mono font-medium text-foreground">{row.rule.cost_center_code}</span>
+                    <p className="text-muted-foreground truncate">{row.rule.cost_center_name}</p>
                   </td>
                   <td className="p-2 text-right align-top font-medium tabular-nums">{row.rule.std_qty}</td>
                   <td className="p-2 text-right align-top text-red-400/80 tabular-nums">{row.rule.c_value}</td>
@@ -513,7 +514,7 @@ export default function Standards() {
                       <button
                         type="button"
                         onClick={() => openEdit(row.rule)}
-                        className="text-amber-400 hover:underline mr-2"
+                        className="text-primary hover:underline mr-2"
                       >
                         Edit
                       </button>
@@ -533,13 +534,13 @@ export default function Standards() {
                   className="border-t border-slate-800 bg-slate-900/25 hover:bg-slate-900/50"
                 >
                   <td className="p-2 align-top">
-                    <p className="text-[10px] uppercase tracking-wide text-slate-600 mb-0.5">Code</p>
-                    <span className="mes-prod-code text-amber-200/90">{row.product.code}</span>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">Code</p>
+                    <span className="mes-prod-code font-mono text-sm font-semibold text-foreground">{row.product.code}</span>
                     <span className="ml-1 text-[10px] uppercase text-sky-400 font-semibold">No rule yet</span>
-                    <p className="text-[10px] uppercase tracking-wide text-slate-600 mt-1.5 mb-0.5">Description</p>
-                    <p className="text-slate-300 truncate">{row.product.description}</p>
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground mt-1.5 mb-0.5">Description</p>
+                    <p className="text-foreground truncate">{row.product.description}</p>
                     {row.product.base_uom && (
-                      <p className="text-[10px] text-slate-600 mt-1">UOM: {row.product.base_uom}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">UOM: {row.product.base_uom}</p>
                     )}
                   </td>
                   <td className="p-2 align-top text-slate-500" colSpan={canWrite ? 7 : 6}>
@@ -597,10 +598,14 @@ export default function Standards() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
           <form
             onSubmit={handleSave}
-            className="bg-slate-900 border border-slate-700 rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto space-y-4"
+            className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 pt-12 w-full max-w-4xl max-h-[90vh] overflow-y-auto space-y-4"
           >
+            <ModalCloseButton
+              onClick={() => setModal(null)}
+              className="absolute right-4 top-4 z-10"
+            />
             <div>
-              <h3 className="font-semibold text-lg">{modal === 'add' ? 'Add' : 'Edit'} grading rule</h3>
+              <h3 className="font-semibold text-lg pr-10">{modal === 'add' ? 'Add' : 'Edit'} grading rule</h3>
               <p className="text-xs text-slate-500 mt-1">
                 Code and description come from{' '}
                 <Link to="/product-master" className="text-amber-400 hover:underline">
@@ -679,8 +684,8 @@ export default function Standards() {
               />
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2.5">
-              <p className="text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
+              <p className="text-xs text-sky-950 leading-relaxed">
                 UOM, stock, accounts, tax, and other fields live in Product Master for this code. Opens
                 in a new tab — this grading form stays open here.
               </p>
@@ -688,7 +693,7 @@ export default function Standards() {
                 type="button"
                 disabled={!form.prod_code}
                 onClick={goToProductMasterUpdate}
-                className="shrink-0 text-sm font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="shrink-0 text-sm font-semibold text-primary hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
                 title={
                   form.prod_code
                     ? `Open ${form.prod_code} in Product Master (new tab)`
