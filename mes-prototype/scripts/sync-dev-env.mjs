@@ -29,10 +29,15 @@ const dbLines = {
   MES_DB_NAME: dbName,
 };
 
-const defaultLines = {
-  MES_WEB_PORT: '8080',
+const dockerPortLines = {
+  MES_WEB_PORT: '6001',
+  MES_API_PORT: '6000',
+  MES_API_HOST_PORT: '6002',
+  CORS_ORIGINS: 'http://localhost:6001,http://localhost:6002',
+};
+
+const optionalDefaults = {
   JWT_SECRET: 'mes-docker-local-dev-jwt-secret-min-32-chars',
-  CORS_ORIGINS: 'http://localhost:8080',
   MES_AUTO_SEED: '1',
 };
 
@@ -50,7 +55,11 @@ for (const [key, value] of Object.entries(dbLines)) {
   dockerContent = upsertEnvLine(dockerContent, key, value);
 }
 
-for (const [key, value] of Object.entries(defaultLines)) {
+for (const [key, value] of Object.entries(dockerPortLines)) {
+  dockerContent = upsertEnvLine(dockerContent, key, value);
+}
+
+for (const [key, value] of Object.entries(optionalDefaults)) {
   const re = new RegExp(`^${key}=`, 'm');
   if (!re.test(dockerContent)) {
     dockerContent = upsertEnvLine(dockerContent, key, value);

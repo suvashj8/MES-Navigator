@@ -14,7 +14,7 @@ RUN npm ci --omit=dev
 COPY mes-prototype/server/ ./
 
 ENV NODE_ENV=production \
-    PORT=3101 \
+    PORT=6000 \
     HOST=0.0.0.0 \
     EXCEL_PATH=/app/data/bead-for-life.xlsx \
     STAFF_UPLOAD_DIR=/app/uploads/staff
@@ -24,10 +24,10 @@ RUN mkdir -p /app/uploads/staff
 COPY mes-prototype/docker/api-entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
-EXPOSE 3101
+EXPOSE 6000
 
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
-  CMD node -e "fetch('http://127.0.0.1:3101/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:6000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
 CMD ["node", "index.js"]

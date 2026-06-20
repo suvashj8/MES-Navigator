@@ -72,12 +72,14 @@ Run the UI, API, and PostgreSQL together:
 ```powershell
 cd mes-prototype
 copy .env.docker.example .env.docker
-# Edit JWT_SECRET and CORS_ORIGINS if needed (defaults work for localhost:8080)
+# Edit JWT_SECRET and CORS_ORIGINS if needed (defaults work for localhost:6001)
 npm run docker:up
 ```
 
-- **UI:** http://localhost:8080 (nginx serves the SPA and proxies `/api` to the API container)
-- **Postgres on host:** port from `dev-ports.json` / `.env.docker` (`MES_DB_PORT`, default **55437**)
+- **Web UI:** http://localhost:6001 (nginx serves the SPA; `/api` proxied to the API container)
+- **API (direct):** http://localhost:6002/api/... (curl, Postman, or browser)
+- **API (internal container port):** 6000
+- **Postgres on host:** **5432** (default; `MES_DB_PORT` in `.env.docker`)
 - **First start:** seeds staff, grading rules, and demo users from `bead for life (1).xlsx` when the database is empty (`MES_AUTO_SEED=1`)
 - **Login:** `admin` / `admin123`
 
