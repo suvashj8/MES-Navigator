@@ -134,6 +134,39 @@ body {
   @apply rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-950;
 }
 
+/* Form hints & empty states — readable on light panel */
+.mes-field-hint {
+  @apply text-xs font-medium text-foreground/80;
+}
+
+.mes-empty-hint {
+  @apply text-center text-sm font-medium text-foreground/70;
+}
+
+.mes-grade-badge {
+  @apply inline-flex items-center justify-center border font-bold;
+}
+
+.mes-grade-badge--c {
+  @apply border-slate-400 bg-slate-100 text-slate-800;
+}
+
+.mes-grade-badge--b {
+  @apply border-orange-300 bg-orange-50 text-orange-900;
+}
+
+.mes-grade-badge--a {
+  @apply border-sky-300 bg-sky-50 text-sky-900;
+}
+
+.mes-grade-badge--aplus {
+  @apply border-violet-300 bg-violet-50 text-violet-900;
+}
+
+.mes-grade-badge--aa {
+  @apply border-emerald-400 bg-emerald-50 text-emerald-900;
+}
+
 /* Modal close — always high-contrast (not overridden by legacy slate bridge) */
 .mes-modal-close {
   @apply border-border bg-background text-foreground hover:bg-muted;

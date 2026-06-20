@@ -5,6 +5,7 @@ import { resolveDepartment } from '../scope.js';
 import { calculateGrade, findStandard } from '../grading.js';
 import { writeDailyAudit } from '../lib/dailyGradingAudit.js';
 import { getProductMasterByCode } from '../lib/productMasterHelpers.js';
+import { regNoSearchTerms } from '../lib/staffRegNo.js';
 
 export function registerDailyGradingRoutes(app) {
 app.get('/api/daily-grading', requirePermission('reports:read'), asyncHandler(async (req, res) => {
@@ -42,8 +43,8 @@ app.post('/api/daily-grading', requirePermission('daily-grading:write'), asyncHa
   if (req.user.role === 'supervisor' && req.user.department && staffRow.department !== req.user.department) {
     return res.status(403).json({ error: 'Cannot record grading for staff outside your department' });
   }
-  const std = await findStandard(prod_code, cost_center_code, entry_date);
-  if (!std) return res.status(400).json({ error: 'No grading standard for product/cost center' });
+  const std = await findStandard(prod_code, cost_center_code, entry_date, staffRow.department);
+  if (!std) return res.status(400).json({ error: 'No grading standard for this product and department' });
 
   const calc = calculateGrade(qty, std);
   const entered_by = req.user.username;
@@ -92,8 +93,9 @@ app.get('/api/daily-grading/deleted', requirePermission('daily-grading:delete'),
     params.push(department);
   }
   if (staff_q) {
+    const { like } = regNoSearchTerms(staff_q);
     baseWhere += ' AND (s.name LIKE ? OR CAST(s.reg_no AS TEXT) LIKE ?)';
-    params.push(`%${staff_q}%`, `%${staff_q}%`);
+    params.push(`%${staff_q}%`, like);
   }
 
   const total =

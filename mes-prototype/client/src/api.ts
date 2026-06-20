@@ -218,9 +218,10 @@ export const api = {
       body: JSON.stringify({ create_missing: createMissing }),
     }),
 
-  lookupStandard: (prod_code: string, cost_center_code: string, entry_date?: string) => {
+  lookupStandard: (prod_code: string, cost_center_code: string, entry_date?: string, department?: string) => {
     const params = new URLSearchParams({ prod_code, cost_center_code });
     if (entry_date) params.set('entry_date', entry_date);
+    if (department) params.set('department', department);
     return request<GradingStandard>(`/grading-standards/lookup?${params}`);
   },
 
@@ -312,8 +313,30 @@ export const api = {
     if (photo) fd.append('photo', photo);
     return request<Staff>('/staff', { method: 'POST', body: fd });
   },
-  updateStaff: (id: number, body: { is_active: number }) =>
-    request<Staff>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  updateStaff: (
+    id: number,
+    body: Partial<{
+      reg_no: number;
+      name: string;
+      department: string;
+      is_active: number;
+      remove_photo: boolean;
+    }>,
+    photo?: File | null
+  ) => {
+    const useForm = photo != null || body.remove_photo;
+    if (useForm) {
+      const fd = new FormData();
+      if (body.reg_no != null) fd.append('reg_no', String(body.reg_no));
+      if (body.name != null) fd.append('name', body.name);
+      if (body.department != null) fd.append('department', body.department);
+      if (body.is_active != null) fd.append('is_active', String(body.is_active));
+      if (body.remove_photo) fd.append('remove_photo', '1');
+      if (photo) fd.append('photo', photo);
+      return request<Staff>(`/staff/${id}`, { method: 'PATCH', body: fd });
+    }
+    return request<Staff>(`/staff/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
+  },
 
   updateProfile: (body: { display_name?: string; password?: string }) =>
     request<{ user: User }>('/auth/profile', { method: 'PATCH', body: JSON.stringify(body) }),
@@ -409,6 +432,7 @@ export interface NepaliDateInfo {
 export interface Staff {
   id: number;
   reg_no: number;
+  reg_display?: string;
   name: string;
   department: string;
   has_photo?: boolean;
@@ -665,6 +689,8 @@ export interface GradingStandard {
   b_value: number;
   a_value: number;
   aplus_value: number;
+  aa_value: number;
+  department?: string | null;
   effective_date: string | null;
   product_master_id?: number | null;
   master_description?: string | null;
@@ -705,6 +731,8 @@ export interface StandardInput {
   b_value: number;
   a_value: number;
   aplus_value: number;
+  aa_value: number;
+  department: string;
   effective_date?: string | null;
 }
 
@@ -713,6 +741,7 @@ export interface GradePreviewInput {
   cost_center_code: string;
   quantity: number;
   entry_date?: string;
+  department?: string;
 }
 
 export interface GradePreviewResult {
@@ -789,7 +818,7 @@ export interface Dashboard {
   trend: { from: string; to: string; days: TrendDay[] };
   weekWorkersGraded: number;
   weekEntries: number;
-  workersNotGradedToday?: { id: number; reg_no: number; name: string; department: string }[];
+  workersNotGradedToday?: { id: number; reg_no: number; reg_display?: string; name: string; department: string }[];
   workersNotGradedTotal?: number;
   workersNotGradedOffset?: number;
   workersNotGradedLimit?: number;
@@ -836,6 +865,7 @@ export interface WorkerDetail {
 export interface Scorecard {
   staff_id: number;
   reg_no: number;
+  reg_display?: string;
   staff_name: string;
   department: string;
   total_entries: number;

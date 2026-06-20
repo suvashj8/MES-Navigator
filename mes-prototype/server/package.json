@@ -13,7 +13,9 @@
     "migrate:from-sqlite": "node scripts/migrate-sqlite-to-postgres.js",
     "migrate:from-sqlite:dry": "node scripts/migrate-sqlite-to-postgres.js --dry-run",
     "cleanup:legacy-sqlite": "node scripts/cleanup-legacy-sqlite.js",
-    "migrate:staff-photos": "node scripts/migrate-staff-photos-to-disk.js"
+    "migrate:staff-photos": "node scripts/migrate-staff-photos-to-disk.js",
+    "sync:staff": "node scripts/sync-staff-from-excel.js",
+    "sync:grading": "node scripts/sync-grading-from-excel.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

@@ -1,4 +1,5 @@
 import type { Staff } from '../../../api';
+import { displayStaffRegNo } from '../../../utils/staffRegNo';
 
 export default function WorkerQuickActions({
   floorMode,
@@ -49,7 +50,7 @@ export default function WorkerQuickActions({
                     ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
                     : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
                 }`}
-                title={`Reg ${s!.reg_no}`}
+                title={displayStaffRegNo(s!)}
               >
                 <span className="text-sm font-semibold truncate max-w-[10rem] inline-block">{s!.name}</span>
               </button>

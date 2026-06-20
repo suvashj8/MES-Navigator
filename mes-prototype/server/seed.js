@@ -4,9 +4,12 @@ import { fileURLToPath } from 'url';
 import { one, all, run, initSchema } from './db.js';
 import { seedDefaultUsers } from './auth.js';
 import { linkGradingStandardsToProductMaster } from './productMasterLink.js';
+import { loadStaffFromExcel } from './lib/staffExcel.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const excelPath = path.join(__dirname, '..', '..', 'bead for life.xlsx');
+import { resolveExcelPath } from './lib/excelPath.js';
+
+const excelPath = resolveExcelPath();
 
 function parseArticle(display) {
   const s = String(display || '').trim();
@@ -44,16 +47,11 @@ async function main() {
 
   const wb = XLSX.readFile(excelPath);
 
-  const staffRows = XLSX.utils.sheet_to_json(wb.Sheets['1'], { header: 1 });
-  let regCounter = 100;
-  for (let i = 1; i < staffRows.length; i++) {
-    const [reg, name, dept] = staffRows[i];
-    if (!name) continue;
-    const regNo = reg != null && reg !== '' ? Number(reg) : ++regCounter;
+  for (const row of loadStaffFromExcel(excelPath)) {
     await run('INSERT INTO staff (reg_no, name, department) VALUES (?, ?, ?)', [
-      regNo,
-      String(name).trim(),
-      String(dept || 'General').trim(),
+      row.regNo,
+      row.name,
+      row.department,
     ]);
   }
 
@@ -85,8 +83,8 @@ async function main() {
       `
       INSERT INTO grading_standards (
         prod_code, prod_name, cost_center_code, cost_center_name,
-        standard_min, std_qty, c_value, b_value, a_value, aplus_value, effective_date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        standard_min, std_qty, c_value, b_value, a_value, aplus_value, aa_value, effective_date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         String(prodCode).trim(),
@@ -98,6 +96,7 @@ async function main() {
         Number(cVal),
         Number(bVal),
         Number(aVal),
+        Number(aplus),
         Number(aplus),
         fmtDate(effDate),
       ]

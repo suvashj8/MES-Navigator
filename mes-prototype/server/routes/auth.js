@@ -8,6 +8,9 @@ import { loginHandler } from '../middleware/loginGuard.js';
 import { refreshHandler } from '../middleware/refreshGuard.js';
 
 export function registerPublicAuthRoutes(app) {
+  app.get('/api/health', (_req, res) => {
+    res.json({ ok: true });
+  });
   app.post('/api/auth/login', loginIpRateLimit, asyncHandler(loginHandler));
   app.post('/api/auth/refresh', asyncHandler(refreshHandler));
 }

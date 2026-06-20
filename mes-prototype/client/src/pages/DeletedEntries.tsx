@@ -7,6 +7,7 @@ import TableSkeleton from '../components/skeleton/TableSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
 import { formatNepalDateTime } from '../utils/formatDateTime';
+import { formatStaffRegNo } from '../utils/staffRegNo';
 
 export default function DeletedEntries() {
   const { can } = useAuth();
@@ -118,7 +119,7 @@ export default function DeletedEntries() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Reg # or name"
+            placeholder="BFL no or name"
             className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-sm outline-none focus:ring-2 focus:ring-amber-400/40"
           />
         </div>
@@ -185,7 +186,7 @@ export default function DeletedEntries() {
                     <td className="p-3">
                       <p className="font-medium truncate">{r.staff_name || `Staff #${r.staff_id}`}</p>
                       <p className="text-xs text-slate-500">
-                        {r.reg_no != null ? `Reg ${r.reg_no}` : `ID ${r.staff_id}`}
+                        {r.reg_no != null ? formatStaffRegNo(r.reg_no) : `ID ${r.staff_id}`}
                         {r.department ? ` · ${r.department}` : ''}
                       </p>
                     </td>

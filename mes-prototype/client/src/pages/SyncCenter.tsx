@@ -5,6 +5,7 @@ import Toast from '../components/Toast';
 import { loadOfflineQueue, offlineQueueKey, saveOfflineQueue, syncOfflineQueue, type OfflineQueueItem } from '../offlineQueue';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
+import { displayStaffRegNo } from '../utils/staffRegNo';
 
 export default function SyncCenter() {
   const { user } = useAuth();
@@ -133,7 +134,7 @@ export default function SyncCenter() {
                       {s ? (
                         <>
                           <p className="font-medium truncate">{s.name}</p>
-                          <p className="text-xs text-slate-500">Reg {s.reg_no} · {s.department}</p>
+                          <p className="text-xs text-slate-500">{displayStaffRegNo(s)} · {s.department}</p>
                         </>
                       ) : (
                         <span className="text-slate-500">Staff #{it.staff_id}</span>

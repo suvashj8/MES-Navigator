@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, type Department, type Staff } from '../api';
 import ModalCloseButton from '../components/ModalCloseButton';
 import PageShell from '../components/PageShell';
+import StaffAvatar from '../components/StaffAvatar';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
-import { blockNegativeNumberKey, sanitizeNonNegativeIntegerInput } from '../utils/numericInput';
 import { blockPersonNameKey, isValidPersonName, sanitizePersonNameInput } from '../utils/textInput';
+import { displayStaffRegNo, formatStaffRegNo, nextStaffRegNo, parseStaffRegNoInput } from '../utils/staffRegNo';
 
 const PAGE_SIZE = 10;
 
@@ -18,7 +19,8 @@ export default function StaffMaster() {
   const [departmentRows, setDepartmentRows] = useState<Department[]>([]);
   const [q, setQ] = useState('');
   const [showFormer, setShowFormer] = useState(false);
-  const [showAdd, setShowAdd] = useState(false);
+  const [showStaffForm, setShowStaffForm] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
   const [showAddDept, setShowAddDept] = useState(false);
   const [regNo, setRegNo] = useState('');
   const [name, setName] = useState('');
@@ -31,6 +33,8 @@ export default function StaffMaster() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [savingStaff, setSavingStaff] = useState(false);
+  const [removePhoto, setRemovePhoto] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [page, setPage] = useState(0);
 
@@ -109,13 +113,24 @@ export default function StaffMaster() {
     }
   }
 
-  async function handleAdd(e: React.FormEvent) {
+  function closeStaffForm() {
+    setShowStaffForm(false);
+    setEditingStaff(null);
+    setRegNo('');
+    setName('');
+    setRemovePhoto(false);
+    onPickPhoto(null);
+    setError('');
+  }
+
+  async function handleStaffFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
+    setSavingStaff(true);
     try {
-      const reg = Number(regNo);
-      if (!Number.isInteger(reg) || reg <= 0) {
-        setError('Registration number must be a positive integer');
+      const reg = parseStaffRegNoInput(regNo);
+      if (reg == null || !Number.isInteger(reg) || reg <= 0) {
+        setError('Registration number must be like BFL-01 or a positive number');
         return;
       }
       const trimmedName = name.trim();
@@ -127,26 +142,33 @@ export default function StaffMaster() {
         setError('Please select a department');
         return;
       }
-      await api.createStaff(
-        { reg_no: reg, name: trimmedName, department: newDept },
-        photoFile
-      );
-      setShowAdd(false);
-      setRegNo('');
-      setName('');
-      setPhotoFile(null);
-      if (photoPreview) URL.revokeObjectURL(photoPreview);
-      setPhotoPreview(null);
+      if (editingStaff) {
+        await api.updateStaff(
+          editingStaff.id,
+          {
+            reg_no: reg,
+            name: trimmedName,
+            department: newDept,
+            remove_photo: removePhoto,
+          },
+          photoFile
+        );
+      } else {
+        await api.createStaff({ reg_no: reg, name: trimmedName, department: newDept }, photoFile);
+      }
+      closeStaffForm();
       load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add staff');
+      setError(err instanceof Error ? err.message : editingStaff ? 'Failed to update staff' : 'Failed to add staff');
+    } finally {
+      setSavingStaff(false);
     }
   }
 
   async function handleFire(s: Staff) {
     const ok = await confirm({
       title: 'Fire worker',
-      message: `Fire ${s.name} (Reg #${s.reg_no})?\n\nThey will be removed from daily entry and worker lists. Past grading records are kept.`,
+      message: `Fire ${s.name} (${formatStaffRegNo(s.reg_no)})?\n\nThey will be removed from daily entry and worker lists. Past grading records are kept.`,
       confirmLabel: 'Fire',
       variant: 'danger',
     });
@@ -166,7 +188,7 @@ export default function StaffMaster() {
   async function handleRehire(s: Staff) {
     const ok = await confirm({
       title: 'Rehire worker',
-      message: `Rehire ${s.name} (Reg #${s.reg_no})? They will appear in daily entry again.`,
+      message: `Rehire ${s.name} (${formatStaffRegNo(s.reg_no)})? They will appear in daily entry again.`,
       confirmLabel: 'Rehire',
     });
     if (!ok) return;
@@ -199,7 +221,34 @@ export default function StaffMaster() {
     }
     setError('');
     setPhotoFile(file);
+    setRemovePhoto(false);
     setPhotoPreview(URL.createObjectURL(file));
+  }
+
+  function openEditStaff(s: Staff) {
+    setError('');
+    setEditingStaff(s);
+    setRegNo(formatStaffRegNo(s.reg_no));
+    setName(s.name);
+    setNewDept(s.department);
+    setRemovePhoto(false);
+    onPickPhoto(null);
+    setShowStaffForm(true);
+  }
+
+  async function openAddStaff() {
+    setError('');
+    setEditingStaff(null);
+    setName('');
+    setRemovePhoto(false);
+    onPickPhoto(null);
+    try {
+      const allStaff = await api.staff({ all: true });
+      setRegNo(nextStaffRegNo(allStaff));
+    } catch {
+      setRegNo(nextStaffRegNo(staff));
+    }
+    setShowStaffForm(true);
   }
 
   const byDept = activeStaff.reduce<Record<string, Staff[]>>((acc, s) => {
@@ -222,7 +271,7 @@ export default function StaffMaster() {
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setShowAdd(true)}
+              onClick={() => void openAddStaff()}
               className="px-4 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold text-sm"
             >
               + Add Staff
@@ -240,7 +289,7 @@ export default function StaffMaster() {
 
       <div className="flex gap-3 mb-6 flex-wrap items-center">
         <input
-          placeholder="Search name or reg no..."
+          placeholder="Search name or BFL no…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm flex-1 min-w-[200px]"
@@ -270,17 +319,17 @@ export default function StaffMaster() {
         )}
       </div>
 
-      {error && !showAdd && <p className="mb-4 text-red-400 text-sm">{error}</p>}
+      {error && !showStaffForm && <p className="mb-4 text-red-400 text-sm">{error}</p>}
 
       <div className="overflow-x-auto rounded-xl border border-slate-800">
         <table className="w-full text-sm">
           <thead className="bg-slate-900 text-slate-400 text-left">
             <tr>
-              <th className="p-3">Reg #</th>
+              <th className="p-3">Reg # (BFL)</th>
               <th className="p-3">Staff Name</th>
               <th className="p-3">Department</th>
               {showFormer && canWrite && <th className="p-3">Status</th>}
-              {canWrite && <th className="p-3 w-28">Actions</th>}
+              {canWrite && <th className="p-3 w-36">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -291,7 +340,7 @@ export default function StaffMaster() {
                   key={s.id}
                   className={`border-t border-slate-800 ${inactive ? 'opacity-70' : ''}`}
                 >
-                  <td className="p-3 font-mono">{s.reg_no}</td>
+                  <td className="p-3 font-mono">{displayStaffRegNo(s)}</td>
                   <td className="p-3">{s.name}</td>
                   <td className="p-3">
                     <span className="px-2 py-0.5 rounded bg-slate-800 text-xs">{s.department}</span>
@@ -305,25 +354,35 @@ export default function StaffMaster() {
                   )}
                   {canWrite && (
                     <td className="p-3">
-                      {inactive ? (
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <button
                           type="button"
                           disabled={busyId === s.id}
-                          onClick={() => handleRehire(s)}
-                          className="text-emerald-400 hover:underline text-xs disabled:opacity-50"
+                          onClick={() => openEditStaff(s)}
+                          className="text-amber-400 hover:underline text-xs disabled:opacity-50"
                         >
-                          Rehire
+                          Edit
                         </button>
-                      ) : (
-                        <button
-                          type="button"
-                          disabled={busyId === s.id}
-                          onClick={() => handleFire(s)}
-                          className="text-red-400 hover:underline text-xs disabled:opacity-50"
-                        >
-                          Fire
-                        </button>
-                      )}
+                        {inactive ? (
+                          <button
+                            type="button"
+                            disabled={busyId === s.id}
+                            onClick={() => handleRehire(s)}
+                            className="text-emerald-400 hover:underline text-xs disabled:opacity-50"
+                          >
+                            Rehire
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={busyId === s.id}
+                            onClick={() => handleFire(s)}
+                            className="text-red-400 hover:underline text-xs disabled:opacity-50"
+                          >
+                            Fire
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
@@ -388,6 +447,18 @@ export default function StaffMaster() {
             <ModalCloseButton onClick={() => setShowAddDept(false)} className="absolute right-4 top-4 z-10" />
             <h3 className="font-semibold pr-10">Add Department</h3>
             <div>
+              <label className="text-xs text-slate-400">Department name *</label>
+              <input
+                type="text"
+                value={deptName}
+                onChange={(e) => setDeptName(e.target.value)}
+                placeholder="e.g. Production"
+                maxLength={120}
+                required
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
               <label className="text-xs text-slate-400">Department ID *</label>
               <input
                 type="text"
@@ -399,18 +470,6 @@ export default function StaffMaster() {
                 className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 font-mono text-sm"
               />
               <p className="text-[11px] text-muted-foreground mt-1">Letters, numbers, hyphen, underscore</p>
-            </div>
-            <div>
-              <label className="text-xs text-slate-400">Department name *</label>
-              <input
-                type="text"
-                value={deptName}
-                onChange={(e) => setDeptName(e.target.value)}
-                placeholder="e.g. Production"
-                maxLength={120}
-                required
-                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
-              />
             </div>
             <div>
               <label className="text-xs text-slate-400">Description</label>
@@ -437,36 +496,43 @@ export default function StaffMaster() {
         </div>
       )}
 
-      {showAdd && (
+      {showStaffForm && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
           <form
-            onSubmit={handleAdd}
+            onSubmit={handleStaffFormSubmit}
             className="relative bg-slate-900 border border-slate-700 rounded-xl p-6 pt-12 w-full max-w-sm space-y-3"
           >
-            <ModalCloseButton onClick={() => setShowAdd(false)} className="absolute right-4 top-4 z-10" />
-            <h3 className="font-semibold pr-10">Add Staff</h3>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              placeholder="Registration #"
-              value={regNo}
-              onChange={(e) => setRegNo(sanitizeNonNegativeIntegerInput(e.target.value))}
-              onKeyDown={blockNegativeNumberKey}
-              required
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
-            />
-            <input
-              type="text"
-              inputMode="text"
-              autoComplete="name"
-              placeholder="Full name"
-              value={name}
-              onChange={(e) => setName(sanitizePersonNameInput(e.target.value))}
-              onKeyDown={blockPersonNameKey}
-              required
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
-            />
+            <ModalCloseButton onClick={closeStaffForm} className="absolute right-4 top-4 z-10" />
+            <h3 className="font-semibold pr-10">{editingStaff ? 'Edit Staff' : 'Add Staff'}</h3>
+            <div>
+              <label className="text-xs text-slate-400">Registration (BFL) *</label>
+              <input
+                type="text"
+                autoComplete="off"
+                placeholder="e.g. BFL-01"
+                value={regNo}
+                onChange={(e) => setRegNo(e.target.value.toUpperCase())}
+                required
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 font-mono"
+              />
+              {!editingStaff && (
+                <p className="text-[11px] text-slate-500 mt-1">Auto-filled — edit only if you need a different number</p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs text-slate-400">Full name *</label>
+              <input
+                type="text"
+                inputMode="text"
+                autoComplete="name"
+                placeholder="Full name"
+                value={name}
+                onChange={(e) => setName(sanitizePersonNameInput(e.target.value))}
+                onKeyDown={blockPersonNameKey}
+                required
+                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2"
+              />
+            </div>
             <label className="text-xs text-slate-400 block mb-1">Department *</label>
             <select
               value={newDept}
@@ -486,6 +552,14 @@ export default function StaffMaster() {
               <div className="h-14 w-14 rounded-xl border border-slate-700 bg-slate-800 overflow-hidden flex items-center justify-center shrink-0">
                 {photoPreview ? (
                   <img src={photoPreview} alt="Staff photo preview" className="h-full w-full object-cover" />
+                ) : editingStaff && editingStaff.has_photo && !removePhoto ? (
+                  <StaffAvatar
+                    staffId={editingStaff.id}
+                    hasPhoto={editingStaff.has_photo}
+                    name={editingStaff.name}
+                    className="h-14 w-14 rounded-xl"
+                    imgClassName="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="text-xs text-slate-500">Photo</span>
                 )}
@@ -498,10 +572,13 @@ export default function StaffMaster() {
                   onChange={(e) => onPickPhoto(e.target.files?.[0] || null)}
                   className="w-full text-xs text-slate-400 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-800 file:px-3 file:py-2 file:text-slate-200 hover:file:bg-slate-700"
                 />
-                {photoFile && (
+                {(photoFile || (editingStaff?.has_photo && !removePhoto)) && (
                   <button
                     type="button"
-                    onClick={() => onPickPhoto(null)}
+                    onClick={() => {
+                      onPickPhoto(null);
+                      setRemovePhoto(true);
+                    }}
                     className="mt-2 text-xs text-slate-400 hover:text-slate-200"
                   >
                     Remove photo
@@ -512,12 +589,16 @@ export default function StaffMaster() {
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold">
-                Save
+              <button
+                type="submit"
+                disabled={savingStaff}
+                className="flex-1 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold disabled:opacity-50"
+              >
+                {savingStaff ? 'Saving…' : 'Save'}
               </button>
               <button
                 type="button"
-                onClick={() => setShowAdd(false)}
+                onClick={closeStaffForm}
                 className="px-4 py-2 border border-slate-700 rounded-lg"
               >
                 Cancel

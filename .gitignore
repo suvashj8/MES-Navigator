@@ -18,6 +18,8 @@ Thumbs.db
 # Env / secrets
 .env
 .env.*
+!.env.docker.example
+!**/.env.docker.example
 
 # Legacy SQLite (app uses PostgreSQL only — remove with server npm run cleanup:legacy-sqlite)
 **/mes.db

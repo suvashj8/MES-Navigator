@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DailyEntry, Staff } from '../../../api';
+import { staffRegMatchesQuery } from '../../../utils/staffRegNo';
 
 export function useWorkerPicker(opts: {
   staffList: Staff[];
@@ -82,8 +83,7 @@ export function useWorkerPicker(opts: {
     const q = workerQuery.trim().toLowerCase();
     if (!q) return staffList;
     return staffList.filter((s) => {
-      const reg = String(s.reg_no);
-      return reg.includes(q) || s.name.toLowerCase().includes(q) || s.department.toLowerCase().includes(q);
+      return staffRegMatchesQuery(s.reg_no, q) || s.name.toLowerCase().includes(q) || s.department.toLowerCase().includes(q);
     });
   }, [staffList, workerQuery]);
 

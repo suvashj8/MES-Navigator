@@ -47,6 +47,9 @@ export default function ProductCascadeFields(props: Props) {
     onSelectProduct,
   } = props;
 
+  const productMasterHint = 'Products from Product Master (with a grading rule for this station)';
+  const showProductDropdown = productEnabled && showProductList && products.length > 0;
+
   return (
     <>
       <FormField
@@ -64,7 +67,7 @@ export default function ProductCascadeFields(props: Props) {
               ? 'Choose job type to continue'
               : undefined
         }
-        hintClassName={!staffId ? 'text-slate-500' : 'text-amber-400/90'}
+        hintClassName={!staffId ? 'mes-field-hint text-orange-700' : 'mes-field-hint'}
         className="flex-1 min-w-[10rem] max-w-xs"
       >
         <select
@@ -101,7 +104,9 @@ export default function ProductCascadeFields(props: Props) {
                 : undefined
         }
         hintClassName={
-          !activityId || (activityId && costCenters.length === 0) ? 'text-orange-400' : 'text-amber-400/90'
+          !activityId || (activityId && costCenters.length === 0)
+            ? 'mes-field-hint text-orange-700'
+            : 'mes-field-hint'
         }
       >
         <select
@@ -131,11 +136,11 @@ export default function ProductCascadeFields(props: Props) {
         hint={
           !costCenter
             ? labels.pickWorkStationFirst.en
-            : nextStep === 'product'
-              ? 'Products from Product Master (with a grading rule for this station)'
+            : nextStep === 'product' && !showProductDropdown
+              ? productMasterHint
               : undefined
         }
-        hintClassName={!costCenter ? 'text-orange-400' : 'text-amber-400/90'}
+        hintClassName={!costCenter ? 'mes-field-hint text-orange-700' : 'mes-field-hint'}
         className="flex-[2] min-w-[14rem]"
       >
         <div className="relative w-full">
@@ -150,18 +155,32 @@ export default function ProductCascadeFields(props: Props) {
             className={controlCls(floorMode, !productEnabled)}
             disabled={!productEnabled}
           />
-          {showProductList && products.length > 0 && (
-            <ul className="absolute z-10 w-full top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg max-h-40 overflow-y-auto shadow-xl">
+          {showProductDropdown && (
+            <ul
+              className="absolute z-20 w-full top-full mt-1 bg-card border border-border rounded-lg max-h-48 overflow-y-auto shadow-lg"
+              role="listbox"
+              aria-label="Products"
+            >
+              {nextStep === 'product' && (
+                <li
+                  className="px-3 py-2 text-xs font-medium text-foreground/80 border-b border-border bg-muted/50 pointer-events-none"
+                  aria-hidden
+                >
+                  {productMasterHint}
+                </li>
+              )}
               {products.map((p) => (
-                <li key={p.prod_code}>
+                <li key={p.prod_code} role="option">
                   <button
                     type="button"
                     onClick={() => onSelectProduct(p)}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-700"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted/60"
                   >
-                    <span className="font-mono text-amber-200/90">{p.prod_code}</span>
-                    <span className="text-slate-400 ml-2 truncate">{p.prod_name}</span>
-                    {p.base_uom && <span className="text-slate-500 text-xs ml-1">· {p.base_uom}</span>}
+                    <span className="font-mono font-semibold text-foreground">{p.prod_code}</span>
+                    <span className="text-foreground/80 ml-2 truncate">{p.prod_name}</span>
+                    {p.base_uom && (
+                      <span className="text-muted-foreground text-xs ml-1">· {p.base_uom}</span>
+                    )}
                   </button>
                 </li>
               ))}

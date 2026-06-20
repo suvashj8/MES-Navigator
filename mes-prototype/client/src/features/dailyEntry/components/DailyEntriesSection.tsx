@@ -89,7 +89,7 @@ export default function DailyEntriesSection({
               onDelete={onDelete}
             />
           ) : entriesSorted.length === 0 ? (
-            <div className="text-center text-slate-500 py-4">No entries for this date — add the first one above.</div>
+            <div className="mes-empty-hint py-4">No entries for this date — add the first one above.</div>
           ) : (
             <>
               <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-slate-950/85 backdrop-blur border-b border-slate-800">
@@ -105,7 +105,7 @@ export default function DailyEntriesSection({
       ) : (
         <div className="space-y-2">
           {entries.length === 0 ? (
-            <div className="text-center text-slate-500 py-4">No entries for this date — add the first one above.</div>
+            <div className="mes-empty-hint py-4">No entries for this date — add the first one above.</div>
           ) : (
             <EntriesList
               entries={[...entries].slice().reverse()}

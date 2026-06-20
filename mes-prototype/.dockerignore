@@ -1,0 +1,12 @@
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+.git
+**/.env
+**/.env.*
+!**/.env.docker.example
+server/uploads
+*.md
+.agent
+.cursor

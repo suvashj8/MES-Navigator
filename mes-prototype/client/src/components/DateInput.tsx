@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
+import AdDateField from './AdDateField';
 import NepaliDatePicker from './NepaliDatePicker';
 import { formatAdDisplay, formatNepalTimeNow } from '../utils/formatDateTime';
 
@@ -96,12 +97,10 @@ export default function DateInput({
           style={{ gridTemplateColumns: 'minmax(8.25rem, 0.95fr) minmax(11.5rem, 1.15fr)' }}
         >
           <div className="min-w-0">
-            <input
-              type="date"
+            <AdDateField
               value={value}
-              onChange={(e) => onChange(e.target.value)}
-              className={`${inputCls} min-w-0 w-full ${floorMode ? 'min-h-12' : 'min-h-10'}`}
-              title="Gregorian (AD)"
+              onChange={onChange}
+              className={`${inputCls} min-w-0 w-full pr-9 ${floorMode ? 'min-h-12' : 'min-h-10'}`}
             />
             <p className={`mes-date-ad-hint ${hintCls} ${adHint ? 'text-amber-300' : 'invisible select-none'}`}>
               {adHint || '\u00a0'}
@@ -131,13 +130,7 @@ export default function DateInput({
   return (
     <div className={className}>
       {label && <label className={`${lblCls} block mb-1.5`}>{label}</label>}
-      <input
-        type="date"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={inputCls}
-        title="Gregorian (AD)"
-      />
+      <AdDateField value={value} onChange={onChange} className={`${inputCls} pr-9`} />
       <div className="mt-2">
         <span className="mes-date-bs-label text-[10px] font-semibold text-slate-300 uppercase tracking-wide">BS</span>
         <NepaliDatePicker

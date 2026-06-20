@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type RefObject } from 'react';
 import { api, type DailyEntry, type GradePreviewResult, type Staff } from '../../../api';
 import { useConfirm } from '../../../hooks/useConfirm';
 import { parseNonNegativeNumber } from '../../../utils/numericInput';
+import { formatStaffRegNo } from '../../../utils/staffRegNo';
 import type { DailyEntryInput } from '../../../api';
 
 export function useDailyEntrySave(opts: {
@@ -102,8 +103,8 @@ export function useDailyEntrySave(opts: {
 
       playBeep();
       const name = worker?.name ?? 'Worker';
-      const reg = worker?.reg_no ?? saved.reg_no ?? '—';
-      opts.onToast(`Saved — Grade ${grade} for ${name} (Reg ${reg})`);
+      const reg = worker ? formatStaffRegNo(worker.reg_no) : saved.reg_no != null ? formatStaffRegNo(saved.reg_no) : '—';
+      opts.onToast(`Saved — Grade ${grade} for ${name} (${reg})`);
       setSaveSuccess(true);
       if (saveSuccessTimerRef.current) clearTimeout(saveSuccessTimerRef.current);
       saveSuccessTimerRef.current = setTimeout(() => setSaveSuccess(false), 2800);

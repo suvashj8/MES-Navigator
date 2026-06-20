@@ -2,6 +2,7 @@ import GradeBadge from '../../../components/GradeBadge';
 import { labels } from '../../../labels';
 import type { DailyEntry } from '../../../api';
 import { formatNepalDateTime } from '../../../utils/formatDateTime';
+import { formatStaffRegNo } from '../../../utils/staffRegNo';
 
 export default function EntriesTable({
   entries,
@@ -37,7 +38,7 @@ export default function EntriesTable({
         <tbody>
           {entries.length === 0 ? (
             <tr>
-              <td colSpan={colCount} className="p-6 text-center text-slate-500">
+              <td colSpan={colCount} className="p-6 mes-empty-hint">
                 No entries for this date — add the first one above.
               </td>
             </tr>
@@ -49,7 +50,7 @@ export default function EntriesTable({
                 className={`border-t border-slate-800 hover:bg-slate-900/50 transition-colors ${entryRowClass(e.id)}`}
               >
                 <td className={`${tdCls} font-mono text-xs tabular-nums whitespace-nowrap border-r border-slate-800/60`}>
-                  {e.reg_no}
+                  {formatStaffRegNo(e.reg_no)}
                 </td>
                 <td className={`${tdCls} truncate max-w-[14rem]`}>{e.staff_name}</td>
                 <td className={`${tdCls} font-mono text-xs whitespace-nowrap`}>{e.prod_code}</td>

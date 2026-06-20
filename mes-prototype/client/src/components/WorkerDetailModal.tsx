@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, downloadBlob, type DailyGradingAuditRow, type ScorecardParams, type WorkerDetail } from '../api';
 import GradeBadge from './GradeBadge';
 import { formatNepalDateTime } from '../utils/formatDateTime';
+import { formatStaffRegNo } from '../utils/staffRegNo';
 import ModalCloseButton from './ModalCloseButton';
 import Spinner from './Spinner';
 
@@ -63,7 +64,7 @@ export default function WorkerDetailModal({
     setPdfLoading(true);
     try {
       const blob = await api.exportWorkerPdf(staffId, params);
-      downloadBlob(blob, `scorecard-${detail.staff.reg_no}.pdf`);
+      downloadBlob(blob, `scorecard-${formatStaffRegNo(detail.staff.reg_no)}.pdf`);
     } catch (e) {
       alert(e instanceof Error ? e.message : 'PDF failed');
     } finally {
@@ -110,7 +111,7 @@ export default function WorkerDetailModal({
             <div>
               <p className="text-xl font-bold print:text-black">{detail.staff.name}</p>
               <p className="text-sm text-slate-400 print:text-slate-600">
-                Reg #{detail.staff.reg_no} · {detail.staff.department} · {detail.from} to {detail.to}
+                {formatStaffRegNo(detail.staff.reg_no)} · {detail.staff.department} · {detail.from} to {detail.to}
               </p>
             </div>
 

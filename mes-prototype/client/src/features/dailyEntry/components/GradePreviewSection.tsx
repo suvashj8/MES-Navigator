@@ -28,24 +28,24 @@ export default function GradePreviewSection({
   return (
     <>
       {standard && (
-        <div className="text-xs bg-slate-800/80 rounded-lg p-3 space-y-1 text-slate-400">
-          <p className="text-slate-300 font-medium truncate">{standard.prod_name}</p>
-          <p>
-            Std Qty: {standard.std_qty} · B: {standard.b_value} · A: {standard.a_value} · A+:{' '}
-            {standard.aplus_value}
+        <div className="mes-notice-sky rounded-lg p-3 space-y-1.5">
+          <p className="text-sm font-semibold truncate text-sky-950">{standard.prod_name}</p>
+          <p className="text-sm font-medium text-sky-900">
+            B: {standard.b_value} · A: {standard.a_value} · A+: {standard.aplus_value} · AA:{' '}
+            {standard.aa_value ?? standard.aplus_value ?? 0}
           </p>
         </div>
       )}
 
       {preview && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+        <div className="mes-notice-emerald rounded-lg p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm text-slate-300">{labels.calculatedGrade.en}</span>
+            <span className="text-sm font-semibold text-emerald-950">{labels.calculatedGrade.en}</span>
             <GradeBadge grade={preview.grade} size={floorMode ? 'lg' : 'md'} />
-            <span className="text-xs text-slate-400 w-full sm:w-auto sm:ml-auto">
-              W Min: <strong className="text-white">{preview.w_min}</strong>
+            <span className="text-sm font-medium text-emerald-900 w-full sm:w-auto sm:ml-auto">
+              W Min: <strong className="font-bold text-emerald-950">{preview.w_min}</strong>
               <span className="mx-2">·</span>
-              P Hour: <strong className="text-white">{preview.p_hour}</strong>
+              P Hour: <strong className="font-bold text-emerald-950">{preview.p_hour}</strong>
             </span>
           </div>
         </div>

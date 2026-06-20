@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { formatStaffRegNo } from './lib/staffRegNo.js';
 
 export function streamScorecardsPdf(res, { label, from, to, scorecards }) {
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
@@ -43,7 +44,7 @@ export function streamScorecardsPdf(res, { label, from, to, scorecards }) {
   doc.moveTo(x0, y - 2).lineTo(550, y - 2).stroke();
   for (const c of scorecards) {
     row([
-      c.reg_no,
+      formatStaffRegNo(c.reg_no),
       c.staff_name?.slice(0, 18),
       c.department?.slice(0, 12),
       c.total_entries,
@@ -63,14 +64,14 @@ export function streamWorkerPdf(res, detail) {
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   const { staff, summary, entries, from, to } = detail;
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="scorecard-${staff.reg_no}-${from}.pdf"`);
+  res.setHeader('Content-Disposition', `attachment; filename="scorecard-${formatStaffRegNo(staff.reg_no)}-${from}.pdf"`);
   doc.pipe(res);
 
   doc.fontSize(14).text('Navigator Bead for Life MES', { align: 'center' });
   doc.moveDown(0.3);
   doc.fontSize(16).text('Worker Performance Scorecard', { align: 'center' });
   doc.moveDown(0.5);
-  doc.fontSize(11).text(`${staff.name}  (Reg #${staff.reg_no})`);
+  doc.fontSize(11).text(`${staff.name}  (${formatStaffRegNo(staff.reg_no)})`);
   doc.text(`Department: ${staff.department}`);
   doc.text(`Period: ${from} to ${to}`);
   doc.moveDown(1);

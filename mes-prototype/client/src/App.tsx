@@ -64,7 +64,7 @@ function AuthenticatedShell() {
       { to: '/floor', label: 'Floor entry', group: 'Production', permission: 'daily-grading:write' },
       { to: '/daily-entry', label: "Today's production", group: 'Production', permission: 'daily-grading:write' },
       { to: '/reports', label: 'Scorecards', group: 'Reports', permission: 'reports:read' },
-      { to: '/staff', label: 'Staff', group: 'Reports', permission: 'reports:read' },
+      { to: '/staff', label: 'Staff And Department', group: 'Reports', permission: 'reports:read' },
       { to: '/sync', label: 'Sync Center', group: 'Reports', permission: 'daily-grading:write' },
       { to: '/deleted-entries', label: 'Deleted entries', group: 'Reports', permission: 'daily-grading:delete' },
       { to: '/product-master', label: 'Product master', group: 'Setup', permission: 'reports:read' },

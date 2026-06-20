@@ -65,7 +65,33 @@ Saves are **atomic**: product row + account mapping + excise mapping commit in o
 
 **Scorecard rating:** Avg score (C=1, B=2, A=3, AA=4) → Excellent / Good / Average / Needs Improvement
 
-## Quick Start
+## Docker (full stack)
+
+Run the UI, API, and PostgreSQL together:
+
+```powershell
+cd mes-prototype
+copy .env.docker.example .env.docker
+# Edit JWT_SECRET and CORS_ORIGINS if needed (defaults work for localhost:8080)
+npm run docker:up
+```
+
+- **UI:** http://localhost:8080 (nginx serves the SPA and proxies `/api` to the API container)
+- **Postgres on host:** port from `dev-ports.json` / `.env.docker` (`MES_DB_PORT`, default **55437**)
+- **First start:** seeds staff, grading rules, and demo users from `bead for life (1).xlsx` when the database is empty (`MES_AUTO_SEED=1`)
+- **Login:** `admin` / `admin123`
+
+| Command | Purpose |
+|---------|---------|
+| `npm run docker:up` | Build and start mes-web + mes-api + mes-postgres |
+| `npm run docker:down` | Stop all containers |
+| `npm run docker:logs` | Follow container logs |
+| `npm run docker:seed` | Re-run seed inside the API container (destructive truncate) |
+| `npm run db:docker` | Postgres only — for `npm run dev` on the host |
+
+Staff photos persist in the `mes_staff_uploads` Docker volume.
+
+## Quick Start (local dev)
 
 **Requires PostgreSQL** (no SQLite). Create a database, then configure the server:
 

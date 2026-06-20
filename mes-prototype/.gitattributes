@@ -1,0 +1,2 @@
+docker/api-entrypoint.sh text eol=lf
+server/scripts/*.mjs text eol=lf

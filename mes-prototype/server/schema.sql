@@ -120,6 +120,8 @@ CREATE TABLE IF NOT EXISTS grading_standards (
   b_value REAL NOT NULL,
   a_value REAL NOT NULL,
   aplus_value REAL NOT NULL,
+  aa_value REAL NOT NULL DEFAULT 0,
+  department TEXT,
   effective_date TEXT,
   created_by TEXT,
   updated_by TEXT,

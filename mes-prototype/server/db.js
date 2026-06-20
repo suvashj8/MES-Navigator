@@ -237,6 +237,38 @@ async function ensureDescriptionColumn(table) {
   }
 }
 
+async function ensureAaValueColumn() {
+  const col = await one(
+    `
+    SELECT 1 AS ok FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'grading_standards' AND column_name = 'aa_value'
+    `
+  );
+  if (col) return;
+  await pool.query('ALTER TABLE grading_standards ADD COLUMN aa_value REAL NOT NULL DEFAULT 0');
+  await pool.query(
+    `UPDATE grading_standards SET aa_value = aplus_value WHERE aa_value = 0`
+  );
+  console.log('Schema: added grading_standards.aa_value');
+}
+
+async function ensureGradingStandardsDepartmentColumn() {
+  const col = await one(
+    `
+    SELECT 1 AS ok FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'grading_standards' AND column_name = 'department'
+    `
+  );
+  if (col) return;
+  await pool.query('ALTER TABLE grading_standards ADD COLUMN department TEXT');
+  await pool.query(`
+    UPDATE grading_standards
+    SET department = cost_center_name
+    WHERE department IS NULL OR TRIM(department) = ''
+  `);
+  console.log('Schema: added grading_standards.department');
+}
+
 async function ensureDepartmentsTable() {
   const table = await one(
     `
@@ -265,6 +297,8 @@ export async function initSchema() {
   await logPostgresIdentity();
   await execSchemaFile();
   await ensureStaffPhotoPathColumn();
+  await ensureAaValueColumn();
+  await ensureGradingStandardsDepartmentColumn();
   await ensureDepartmentsTable();
   await ensureDescriptionColumn('activities');
   await ensureDescriptionColumn('cost_centers');

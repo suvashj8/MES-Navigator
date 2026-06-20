@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { api, type GradingStandard, type ProductMasterListRow, type StandardInput, type CostCenter } from '../api';
+import { api, type GradingStandard, type ProductMasterListRow, type StandardInput } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { useConfirm } from '../hooks/useConfirm';
 import ModalCloseButton from '../components/ModalCloseButton';
+import AdDateField from '../components/AdDateField';
 import PageShell from '../components/PageShell';
+import GradeBadge from '../components/GradeBadge';
+import {
+  calculateGradePreview,
+  generateThresholds,
+} from '../utils/gradingRuleCalc';
 import {
   blockNegativeNumberKey,
-  parseNonNegativeNumber,
   sanitizeNonNegativeDecimalInput,
 } from '../utils/numericInput';
 
@@ -22,6 +27,8 @@ const emptyForm: StandardInput = {
   b_value: 0,
   a_value: 0,
   aplus_value: 0,
+  aa_value: 0,
+  department: '',
   effective_date: '',
 };
 
@@ -33,7 +40,7 @@ export default function Standards() {
   const canWrite = can('standards:write');
   const location = useLocation();
   const [standards, setStandards] = useState<GradingStandard[]>([]);
-  const [costCenters, setCostCenters] = useState<CostCenter[]>([]);
+  const [departments, setDepartments] = useState<{ id: number; name: string }[]>([]);
   const [masterProducts, setMasterProducts] = useState<ProductMasterListRow[]>([]);
   const [productFilter, setProductFilter] = useState('');
   const [q, setQ] = useState('');
@@ -59,7 +66,7 @@ export default function Standards() {
   }
 
   useEffect(() => {
-    api.costCenters().then(setCostCenters);
+    api.departments().then(setDepartments);
     loadMasterProducts();
     load();
   }, []);
@@ -214,10 +221,26 @@ export default function Standards() {
     );
   }, [masterProducts, productFilter]);
 
-  const selectedMaster = useMemo(
-    () => masterProducts.find((p) => p.code === form.prod_code),
-    [masterProducts, form.prod_code]
+  const rulePreview = useMemo(
+    () => (form.std_qty > 0 ? calculateGradePreview(form.std_qty, form) : null),
+    [form]
   );
+
+  function applyAutoThresholds(qty: number, standardMin = form.standard_min ?? 420) {
+    const t = generateThresholds(qty, standardMin);
+    setForm((f) => ({ ...f, ...t, std_qty: qty }));
+  }
+
+  function onQuantityChange(raw: string) {
+    const sanitized = sanitizeNonNegativeDecimalInput(raw);
+    if (!sanitized) {
+      setForm((f) => ({ ...f, std_qty: 0, b_value: 0, c_value: 0, a_value: 0, aplus_value: 0, aa_value: 0 }));
+      return;
+    }
+    const qty = Number(sanitized);
+    if (!Number.isFinite(qty)) return;
+    applyAutoThresholds(qty);
+  }
 
   function openAdd() {
     setForm(emptyForm);
@@ -229,18 +252,17 @@ export default function Standards() {
   }
 
   function openEdit(s: GradingStandard) {
+    const qty = s.std_qty;
+    const t = generateThresholds(qty, s.standard_min ?? 420);
     setForm({
       prod_code: s.prod_code,
       prod_name: s.master_description || s.prod_name,
       cost_center_code: s.cost_center_code,
       cost_center_name: s.cost_center_name,
       standard_min: s.standard_min,
-      std_qty: s.std_qty,
-      c_value: s.c_value,
-      b_value: s.b_value,
-      a_value: s.a_value,
-      aplus_value: s.aplus_value,
+      department: s.department || s.cost_center_name || '',
       effective_date: s.effective_date || '',
+      ...t,
     });
     setProductFilter('');
     setEditId(s.id);
@@ -262,31 +284,25 @@ export default function Standards() {
     }));
   }
 
-  function onCostCenterChange(code: string) {
-    const cc = costCenters.find((c) => c.code === code);
-    setForm((f) => ({
-      ...f,
-      cost_center_code: code,
-      cost_center_name: cc?.name || f.cost_center_name,
-    }));
-  }
-
-  function goToProductMasterUpdate() {
-    if (!form.prod_code) return;
-    const url = `/product-master?code=${encodeURIComponent(form.prod_code)}&from=standards`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
-
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!form.prod_code) {
-      setError('Select a product from Product Master');
+      setError('Select a product');
+      return;
+    }
+    if (!form.department.trim()) {
+      setError('Select a department');
+      return;
+    }
+    if (!form.std_qty || form.std_qty <= 0) {
+      setError('Enter a quantity greater than zero');
       return;
     }
     setSaving(true);
     setError('');
     try {
-      const body = { ...form, effective_date: form.effective_date || null };
+      const t = generateThresholds(form.std_qty, form.standard_min ?? 420);
+      const body = { ...form, ...t, effective_date: form.effective_date || null };
       if (modal === 'add') await api.createStandard(body);
       else if (editId) await api.updateStandard(editId, body);
       setModal(null);
@@ -463,11 +479,11 @@ export default function Standards() {
             <tr>
               <th className="p-2 text-left align-bottom">Product Master</th>
               <th className="p-2 text-left align-bottom">Work station</th>
-              <th className="p-2 text-right align-bottom">Std</th>
               <th className="p-2 text-right align-bottom">C</th>
               <th className="p-2 text-right align-bottom">B</th>
               <th className="p-2 text-right align-bottom">A</th>
               <th className="p-2 text-right align-bottom">A+</th>
+              <th className="p-2 text-right align-bottom">AA</th>
               <th className="p-2 text-left align-bottom whitespace-nowrap">Eff.</th>
               {canWrite && <th className="p-2 text-left align-bottom whitespace-nowrap">Actions</th>}
             </tr>
@@ -501,11 +517,13 @@ export default function Standards() {
                     <span className="font-mono font-medium text-foreground">{row.rule.cost_center_code}</span>
                     <p className="text-muted-foreground truncate">{row.rule.cost_center_name}</p>
                   </td>
-                  <td className="p-2 text-right align-top font-medium tabular-nums">{row.rule.std_qty}</td>
                   <td className="p-2 text-right align-top text-red-400/80 tabular-nums">{row.rule.c_value}</td>
                   <td className="p-2 text-right align-top text-orange-400/80 tabular-nums">{row.rule.b_value}</td>
                   <td className="p-2 text-right align-top text-emerald-400/80 tabular-nums">{row.rule.a_value}</td>
                   <td className="p-2 text-right align-top text-amber-400/80 tabular-nums">{row.rule.aplus_value}</td>
+                  <td className="p-2 text-right align-top text-violet-400/80 tabular-nums">
+                    {row.rule.aa_value ?? row.rule.aplus_value ?? 0}
+                  </td>
                   <td className="p-2 text-left align-top text-slate-500 whitespace-nowrap tabular-nums">
                     {row.rule.effective_date || '—'}
                   </td>
@@ -607,122 +625,110 @@ export default function Standards() {
             <div>
               <h3 className="font-semibold text-lg pr-10">{modal === 'add' ? 'Add' : 'Edit'} grading rule</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Code and description come from{' '}
-                <Link to="/product-master" className="text-amber-400 hover:underline">
-                  Product Master
-                </Link>
-                . Updating the master record updates what appears here on save.
+                Sheet5: Per Day Qty and Working Min from this rule, then W Min → grade C / B / A / AA using stored
+                thresholds (same as Excel sheet 4 Grading_Value). New rules auto-fill thresholds from quantity
+                (Standard min 420).
               </p>
             </div>
 
-            <div>
-              <label className="text-xs text-slate-400">Filter products</label>
-              <input
-                type="search"
-                value={productFilter}
-                onChange={(e) => setProductFilter(e.target.value)}
-                placeholder="Search code or description…"
-                className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-end">
-              <div>
-                <label className="text-xs text-slate-400">Code *</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
+              <div className="sm:col-span-2">
+                <label className="text-xs text-slate-400">Product *</label>
+                <input
+                  type="search"
+                  value={productFilter}
+                  onChange={(e) => setProductFilter(e.target.value)}
+                  placeholder="Search code or description…"
+                  className="w-full mt-1 mb-2 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
+                />
                 <select
                   value={form.prod_code}
                   onChange={(e) => onProductSelect(e.target.value)}
-                  className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
                   required
                 >
-                  <option value="">Select from Product Master…</option>
+                  <option value="">Select product…</option>
                   {filteredMasterProducts.map((p) => (
                     <option key={p.id} value={p.code}>
-                      {p.code}
+                      {p.code} — {p.description}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <Field
-                label="Description *"
-                value={form.prod_name}
-                onChange={() => {}}
-                readOnly
-              />
-            </div>
-
-            {selectedMaster && (
-              <p className="text-xs text-slate-500 -mt-1">
-                Master: {selectedMaster.base_uom || '—'} UOM · {selectedMaster.type || '—'} ·{' '}
-                {selectedMaster.product_nature || '—'}
-              </p>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 items-end">
               <div>
-                <label className="text-xs text-slate-400">Work station *</label>
+                <label className="text-xs text-slate-400">Department *</label>
                 <select
-                  value={form.cost_center_code}
-                  onChange={(e) => onCostCenterChange(e.target.value)}
+                  value={form.department}
+                  onChange={(e) => setForm({ ...form, department: e.target.value })}
                   className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
                   required
                 >
-                  <option value="">Select…</option>
-                  {costCenters.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.code} — {c.name}
+                  <option value="">Select department…</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.name}>
+                      {d.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <Field
-                label="Effective date"
-                value={form.effective_date || ''}
-                onChange={(v) => setForm({ ...form, effective_date: v })}
-                type="date"
-              />
-            </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5">
-              <p className="text-xs text-sky-950 leading-relaxed">
-                UOM, stock, accounts, tax, and other fields live in Product Master for this code. Opens
-                in a new tab — this grading form stays open here.
-              </p>
-              <button
-                type="button"
-                disabled={!form.prod_code}
-                onClick={goToProductMasterUpdate}
-                className="shrink-0 text-sm font-semibold text-primary hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                title={
-                  form.prod_code
-                    ? `Open ${form.prod_code} in Product Master (new tab)`
-                    : 'Select a product code first'
-                }
-              >
-                + More Update
-              </button>
-            </div>
-
-            <div>
-              <p className="text-xs text-slate-400 mb-2">Grade thresholds</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                <NumField label="Std Qty (B)" value={form.std_qty} onChange={(v) => setForm({ ...form, std_qty: v })} />
-                <NumField
-                  label="Standard min"
-                  value={form.standard_min ?? 420}
-                  onChange={(v) => setForm({ ...form, standard_min: v })}
+              <div>
+                <label className="text-xs text-slate-400">Quantity *</label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={form.std_qty > 0 ? String(form.std_qty) : ''}
+                  onChange={(e) => onQuantityChange(e.target.value)}
+                  onKeyDown={blockNegativeNumberKey}
+                  placeholder="Standard daily quantity (Per Day Qty)"
+                  className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
+                  required
                 />
-                <NumField label="C value" value={form.c_value} onChange={(v) => setForm({ ...form, c_value: v })} />
-                <NumField label="B value" value={form.b_value} onChange={(v) => setForm({ ...form, b_value: v })} />
-                <NumField label="A value" value={form.a_value} onChange={(v) => setForm({ ...form, a_value: v })} />
-                <NumField
-                  label="A+ value"
-                  value={form.aplus_value}
-                  onChange={(v) => setForm({ ...form, aplus_value: v })}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-xs text-slate-400">Effective date</label>
+                <AdDateField
+                  value={form.effective_date || ''}
+                  onChange={(v) => setForm({ ...form, effective_date: v })}
+                  placeholder="DD/MM/YYYY"
+                  className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
                 />
               </div>
             </div>
+
+            {rulePreview && (
+              <div className="mes-notice-emerald space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold text-emerald-950">Calculated result</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-emerald-900">Grade at {form.std_qty} qty</span>
+                    <GradeBadge grade={rulePreview.grade} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-xs text-emerald-950">
+                  <p>
+                    Per Day Qty: <strong className="font-bold">{rulePreview.per_day_qty}</strong>
+                  </p>
+                  <p>
+                    Working Min: <strong className="font-bold">{rulePreview.working_min}</strong>
+                  </p>
+                  <p>
+                    C Time Min: <strong className="font-bold">{rulePreview.c_time_min}</strong>
+                  </p>
+                  <p>
+                    P Hour: <strong className="font-bold">{rulePreview.p_hour}</strong>
+                  </p>
+                  <p>
+                    W Hour: <strong className="font-bold">{rulePreview.w_hour}</strong>
+                  </p>
+                  <p>
+                    W Min: <strong className="font-bold">{rulePreview.w_min}</strong>
+                  </p>
+                </div>
+              </div>
+            )}
 
             {error && <p className="text-red-400 text-sm">{error}</p>}
 
@@ -746,58 +752,5 @@ export default function Standards() {
         </div>
       )}
     </PageShell>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = 'text',
-  readOnly = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-  readOnly?: boolean;
-}) {
-  return (
-    <div>
-      <label className="text-xs text-slate-400">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        readOnly={readOnly}
-        className={`w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm ${readOnly ? 'opacity-70 cursor-not-allowed text-slate-300' : ''}`}
-        required={!readOnly && type !== 'date'}
-      />
-    </div>
-  );
-}
-
-function NumField({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
-  return (
-    <div>
-      <label className="text-xs text-slate-400">{label}</label>
-      <input
-        type="text"
-        inputMode="decimal"
-        value={Number.isFinite(value) ? String(value) : '0'}
-        onChange={(e) => {
-          const raw = sanitizeNonNegativeDecimalInput(e.target.value);
-          if (!raw) {
-            onChange(0);
-            return;
-          }
-          const n = Number(raw);
-          if (Number.isFinite(n) && n >= 0) onChange(n);
-        }}
-        onKeyDown={blockNegativeNumberKey}
-        className="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm"
-        required
-      />
-    </div>
   );
 }

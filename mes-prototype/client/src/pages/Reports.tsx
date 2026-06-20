@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api, downloadBlob, type Scorecard, type ScorecardParams, type ScorecardReport, type Staff } from '../api';
 import GradeBadge from '../components/GradeBadge';
+import AdDateField from '../components/AdDateField';
 import WorkerDetailModal from '../components/WorkerDetailModal';
 import DepartmentBanner from '../components/DepartmentBanner';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Toast from '../components/Toast';
 import PageShell from '../components/PageShell';
 import ReportsSkeleton from '../components/skeleton/ReportsSkeleton';
+import { displayStaffRegNo, formatStaffRegNo } from '../utils/staffRegNo';
 
 export default function Reports() {
   const location = useLocation();
@@ -195,16 +197,25 @@ export default function Reports() {
         </div>
         {period === 'custom' ? (
           <>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400" />
+            <AdDateField
+              value={dateFrom}
+              onChange={setDateFrom}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 pr-9 text-sm text-slate-100 min-w-[9.5rem]"
+            />
             <span className="self-center text-slate-500">to</span>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400" />
+            <AdDateField
+              value={dateTo}
+              onChange={setDateTo}
+              className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 pr-9 text-sm text-slate-100 min-w-[9.5rem]"
+            />
           </>
         ) : (
-          <input type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400"
-            title={period === 'weekly' ? 'Any day in the week' : 'Any day in the month'} />
+          <AdDateField
+            value={anchor}
+            onChange={setAnchor}
+            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 pr-9 text-sm text-slate-100 min-w-[9.5rem]"
+            title={period === 'weekly' ? 'Any day in the week (DD/MM/YYYY)' : 'Any day in the month (DD/MM/YYYY)'}
+          />
         )}
         <select value={department} onChange={(e) => setDepartment(e.target.value)}
           disabled={deptLocked}
@@ -216,7 +227,7 @@ export default function Reports() {
           className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm min-w-[180px]">
           <option value="">All Workers</option>
           {staffList.map((s) => (
-            <option key={s.id} value={s.id}>{s.reg_no} — {s.name}</option>
+            <option key={s.id} value={s.id}>{displayStaffRegNo(s)} — {s.name}</option>
           ))}
         </select>
       </div>
@@ -304,7 +315,7 @@ function ScorecardCard({
       <div className="w-full p-5 flex flex-wrap items-center gap-4">
         <button type="button" onClick={onToggle} className="flex-1 min-w-[200px] text-left hover:opacity-90">
           <p className="font-semibold text-lg">{card.staff_name}</p>
-          <p className="text-sm text-slate-400">Reg #{card.reg_no} · {card.department}</p>
+          <p className="text-sm text-slate-400">{displayStaffRegNo(card)} · {card.department}</p>
         </button>
         <div className="text-center">
           <p className="text-xs text-slate-500">Avg Score</p>

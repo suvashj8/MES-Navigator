@@ -2,6 +2,7 @@ import FormField from '../../../components/FormField';
 import StaffAvatar from '../../../components/StaffAvatar';
 import { labels } from '../../../labels';
 import type { Staff } from '../../../api';
+import { displayStaffRegNo } from '../../../utils/staffRegNo';
 import { controlCls } from '../utils';
 import type { WorkflowStep } from '../utils';
 
@@ -71,7 +72,7 @@ export default function WorkerPickerField({
             )}
             <span className="truncate text-left">
               {selectedWorker
-                ? `${selectedWorker.reg_no} — ${selectedWorker.name} (${selectedWorker.department})`
+                ? `${displayStaffRegNo(selectedWorker)} — ${selectedWorker.name} (${selectedWorker.department})`
                 : labels.selectWorker.en}
             </span>
           </span>
@@ -84,7 +85,7 @@ export default function WorkerPickerField({
               <input
                 value={workerQuery}
                 onChange={(e) => setWorkerQuery(e.target.value)}
-                placeholder="Search reg #, name, department..."
+                placeholder="Search BFL no, name, department..."
                 className="w-full h-10 rounded-lg bg-slate-800 border border-slate-700 px-3 text-sm text-slate-100 placeholder:text-slate-400"
                 autoFocus
               />
@@ -112,7 +113,7 @@ export default function WorkerPickerField({
                       <span className="min-w-0">
                         <span className="block font-medium text-slate-200 truncate">{s.name}</span>
                         <span className="block text-xs text-slate-400 truncate">
-                          <span className="font-mono">Reg {s.reg_no}</span>
+                          <span className="font-mono">{displayStaffRegNo(s)}</span>
                           <span className="mx-2">·</span>
                           {s.department}
                         </span>

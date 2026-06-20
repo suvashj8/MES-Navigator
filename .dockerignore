@@ -1,0 +1,11 @@
+mes-prototype/node_modules
+mes-prototype/client/node_modules
+mes-prototype/server/node_modules
+mes-prototype/client/dist
+mes-prototype/.git
+mes-prototype/**/.env
+mes-prototype/**/.env.*
+mes-prototype/server/uploads
+**/*.md
+.agent
+.cursor

@@ -1,0 +1,22 @@
+# Build from mes-prototype/ (see docker-compose.yml)
+FROM node:20-alpine AS build
+
+WORKDIR /build
+
+COPY dev-ports.json ./dev-ports.json
+COPY client/package.json client/package-lock.json ./client/
+WORKDIR /build/client
+RUN npm ci
+
+COPY client/ ./
+RUN npm run build
+
+FROM nginx:1.27-alpine
+
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /build/client/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1

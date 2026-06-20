@@ -55,8 +55,8 @@ app.post('/api/grading-standards/product-master-link', requirePermission('standa
 }));
 
 app.get('/api/grading-standards/lookup', requirePermission('standards:read'), asyncHandler(async (req, res) => {
-  const { prod_code, cost_center_code, entry_date } = req.query;
-  const std = await findStandard(prod_code, cost_center_code, entry_date);
+  const { prod_code, cost_center_code, entry_date, department } = req.query;
+  const std = await findStandard(prod_code, cost_center_code, entry_date, department);
   if (!std) return res.status(404).json({ error: 'No grading standard found' });
   res.json(std);
 }));
@@ -81,11 +81,11 @@ app.post('/api/grading-standards', requirePermission('standards:write'), asyncHa
     const r = await run(`
       INSERT INTO grading_standards (
         prod_code, prod_name, product_master_id, cost_center_code, cost_center_name,
-        standard_min, std_qty, c_value, b_value, a_value, aplus_value,
+        standard_min, std_qty, c_value, b_value, a_value, aplus_value, aa_value, department,
         effective_date, created_by, updated_by
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `, [b.prod_code, b.prod_name, b.product_master_id, b.cost_center_code, b.cost_center_name,
-      b.standard_min ?? 420, b.std_qty, b.c_value, b.b_value, b.a_value, b.aplus_value,
+      b.standard_min ?? 420, b.std_qty, b.c_value, b.b_value, b.a_value, b.aplus_value, b.aa_value, b.department,
       b.effective_date || null, req.user.username, req.user.username]);
     res.status(201).json(await one('SELECT * FROM grading_standards WHERE id = ?', [r.lastInsertRowid]));
   } catch (e) {
@@ -108,11 +108,11 @@ app.put('/api/grading-standards/:id', requirePermission('standards:write'), asyn
   await run(`
     UPDATE grading_standards SET
       prod_code=?, prod_name=?, product_master_id=?, cost_center_code=?, cost_center_name=?,
-      standard_min=?, std_qty=?, c_value=?, b_value=?, a_value=?, aplus_value=?,
+      standard_min=?, std_qty=?, c_value=?, b_value=?, a_value=?, aplus_value=?, aa_value=?, department=?,
       effective_date=?, updated_by=?
     WHERE id=?
   `, [b.prod_code, b.prod_name, b.product_master_id, b.cost_center_code, b.cost_center_name,
-    b.standard_min ?? 420, b.std_qty, b.c_value, b.b_value, b.a_value, b.aplus_value,
+    b.standard_min ?? 420, b.std_qty, b.c_value, b.b_value, b.a_value, b.aplus_value, b.aa_value, b.department,
     b.effective_date || null, req.user.username, req.params.id]);
   res.json(await one('SELECT * FROM grading_standards WHERE id = ?', [req.params.id]));
 }));
@@ -123,12 +123,12 @@ app.delete('/api/grading-standards/:id', requirePermission('standards:write'), a
 }));
 
 app.post('/api/grade/preview', requirePermission('daily-grading:write'), asyncHandler(async (req, res) => {
-  const { prod_code, cost_center_code, quantity, entry_date } = req.body;
+  const { prod_code, cost_center_code, quantity, entry_date, department } = req.body;
   const qty = Number(quantity);
   if (!Number.isFinite(qty) || qty < 0) {
     return res.status(400).json({ error: 'quantity cannot be negative' });
   }
-  const std = await findStandard(prod_code, cost_center_code, entry_date);
+  const std = await findStandard(prod_code, cost_center_code, entry_date, department);
   if (!std) return res.status(404).json({ error: 'Standard not found' });
   res.json({ standard: std, ...calculateGrade(qty, std) });
 }));

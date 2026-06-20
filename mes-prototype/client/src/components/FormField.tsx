@@ -64,7 +64,7 @@ export default function FormField({
         {children}
       </div>
       <p
-        className={`text-[10px] leading-4 h-4 mt-1 truncate ${hint ? hintClassName : 'invisible select-none'}`}
+        className={`text-xs leading-4 min-h-4 mt-1 truncate ${hint ? hintClassName : 'invisible select-none'}`}
         aria-hidden={!hint}
       >
         {hint || '\u00a0'}

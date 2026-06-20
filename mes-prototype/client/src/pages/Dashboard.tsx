@@ -9,6 +9,7 @@ import { loadOfflineQueue, offlineQueueKey, syncOfflineQueue } from '../offlineQ
 import Toast from '../components/Toast';
 import DashboardSkeleton from '../components/skeleton/DashboardSkeleton';
 import PageShell from '../components/PageShell';
+import { displayStaffRegNo } from '../utils/staffRegNo';
 
 export default function Dashboard() {
   const { user, can } = useAuth();
@@ -298,7 +299,7 @@ export default function Dashboard() {
                       )}
                     </div>
                     <p className="text-xs text-slate-400 truncate">
-                      <span className="font-mono">Reg {w.reg_no}</span>
+                      <span className="font-mono">{displayStaffRegNo(w)}</span>
                       <span className="mx-2">·</span>
                       {w.department}
                     </p>

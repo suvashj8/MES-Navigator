@@ -3,6 +3,7 @@ import { asyncHandler } from '../asyncHandler.js';
 import { requirePermission } from '../middleware.js';
 import { resolveDepartment } from '../scope.js';
 import { getDashboardTrend, getScorecards, getPeriodRange } from '../reports.js';
+import { formatStaffRegNo } from '../lib/staffRegNo.js';
 
 export function registerDashboardRoutes(app) {
 app.get('/api/dashboard', requirePermission('reports:read'), asyncHandler(async (req, res) => {
@@ -53,7 +54,10 @@ app.get('/api/dashboard', requirePermission('reports:read'), asyncHandler(async 
   const allNotGraded = allStaff.filter((s) => !gradedIds.has(s.id));
   const offset = Math.max(0, Number(not_graded_offset || 0) || 0);
   const limit = Math.min(50, Math.max(1, Number(not_graded_limit || 10) || 10));
-  const workersNotGradedToday = allNotGraded.slice(offset, offset + limit);
+  const workersNotGradedToday = allNotGraded.slice(offset, offset + limit).map((s) => ({
+    ...s,
+    reg_display: formatStaffRegNo(s.reg_no),
+  }));
 
   const productMasterCount = (await one('SELECT COUNT(*) as c FROM product_master', []))?.c ?? 0;
   const productsWithoutRulesCount =

@@ -14,6 +14,7 @@ import {
   parseDataUrlPhoto,
   deleteStaffPhotoFile,
 } from '../lib/staffPhotos.js';
+import { regNoSearchTerms } from '../lib/staffRegNo.js';
 
 export function registerStaffRoutes(app) {
   app.get('/api/staff/:id/photo', requirePermission('reports:read'), asyncHandler(async (req, res) => {
@@ -64,8 +65,9 @@ export function registerStaffRoutes(app) {
       params.push(department);
     }
     if (q) {
+      const { like } = regNoSearchTerms(q);
       sql += ' AND (name LIKE ? OR CAST(reg_no AS TEXT) LIKE ?)';
-      params.push(`%${q}%`, `%${q}%`);
+      params.push(`%${q}%`, like);
     }
     sql += ' ORDER BY is_active DESC, reg_no';
     const rows = await all(sql, [...params]);
@@ -78,7 +80,11 @@ export function registerStaffRoutes(app) {
     staffPhotoUpload.single('photo'),
     asyncHandler(async (req, res) => {
       const { reg_no, name, department } = req.body;
-      const reg = Number(reg_no);
+      let reg = Number(reg_no);
+      if (!Number.isInteger(reg) || reg <= 0) {
+        const m = String(reg_no || '').trim().match(/^BFL-?(\d+)$/i);
+        if (m) reg = Number(m[1]);
+      }
       if (!Number.isInteger(reg) || reg <= 0) {
         return res.status(400).json({ error: 'Registration number must be a positive integer' });
       }
@@ -108,24 +114,89 @@ export function registerStaffRoutes(app) {
     })
   );
 
-  app.patch('/api/staff/:id', requirePermission('staff:write'), asyncHandler(async (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id' });
-    const row = await one(`SELECT ${STAFF_LIST_COLUMNS} FROM staff WHERE id = ?`, [id]);
-    if (!row) return res.status(404).json({ error: 'Staff not found' });
+  app.patch(
+    '/api/staff/:id',
+    requirePermission('staff:write'),
+    staffPhotoUpload.single('photo'),
+    asyncHandler(async (req, res) => {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id' });
+      const row = await one(`SELECT ${STAFF_LIST_COLUMNS} FROM staff WHERE id = ?`, [id]);
+      if (!row) return res.status(404).json({ error: 'Staff not found' });
 
-    const { is_active } = req.body ?? {};
-    if (is_active == null) {
-      return res.status(400).json({ error: 'is_active is required' });
-    }
-    const nextActive = is_active ? 1 : 0;
-    if (row.is_active === nextActive) {
-      return res.json(formatStaffRow(row));
-    }
-    await run('UPDATE staff SET is_active = ? WHERE id = ?', [nextActive, id]);
-    const updated = await one(`SELECT ${STAFF_LIST_COLUMNS} FROM staff WHERE id = ?`, [id]);
-    res.json(formatStaffRow(updated));
-  }));
+      const body = req.body ?? {};
+      const { reg_no, name, department, is_active, remove_photo } = body;
+      const updates = [];
+      const params = [];
+
+      if (reg_no !== undefined && reg_no !== '') {
+        let reg = Number(reg_no);
+        if (!Number.isInteger(reg) || reg <= 0) {
+          const m = String(reg_no).trim().match(/^BFL-?(\d+)$/i);
+          if (m) reg = Number(m[1]);
+        }
+        if (!Number.isInteger(reg) || reg <= 0) {
+          return res.status(400).json({ error: 'Registration number must be a positive integer' });
+        }
+        const clash = await one('SELECT id FROM staff WHERE reg_no = ? AND id != ?', [reg, id]);
+        if (clash) return res.status(409).json({ error: 'Registration number already in use' });
+        updates.push('reg_no = ?');
+        params.push(reg);
+      }
+
+      if (name !== undefined && name !== '') {
+        let cleanName;
+        try {
+          cleanName = assertPersonName(name);
+        } catch (e) {
+          return res.status(e.status || 400).json({ error: e.message });
+        }
+        updates.push('name = ?');
+        params.push(cleanName);
+      }
+
+      if (department !== undefined && String(department).trim()) {
+        updates.push('department = ?');
+        params.push(String(department).trim());
+      }
+
+      if (is_active !== undefined && is_active !== '') {
+        const nextActive =
+          is_active === 1 || is_active === '1' || is_active === true || is_active === 'true' ? 1 : 0;
+        updates.push('is_active = ?');
+        params.push(nextActive);
+      }
+
+      const dropPhoto =
+        remove_photo === '1' || remove_photo === true || remove_photo === 'true';
+      if (dropPhoto) {
+        if (row.photo_path) deleteStaffPhotoFile(row.photo_path);
+        updates.push('photo_path = ?');
+        params.push(null);
+        updates.push('photo_data = ?');
+        params.push(null);
+      }
+
+      if (req.file) {
+        if (row.photo_path) deleteStaffPhotoFile(row.photo_path);
+        const relative = await saveStaffPhotoBuffer(id, req.file.buffer, req.file.mimetype);
+        updates.push('photo_path = ?');
+        params.push(relative);
+        if (!dropPhoto) {
+          updates.push('photo_data = ?');
+          params.push(null);
+        }
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+
+      await run(`UPDATE staff SET ${updates.join(', ')} WHERE id = ?`, [...params, id]);
+      const updated = await one(`SELECT ${STAFF_LIST_COLUMNS} FROM staff WHERE id = ?`, [id]);
+      res.json(formatStaffRow(updated));
+    })
+  );
 
   app.delete('/api/staff/:id/photo', requirePermission('staff:write'), asyncHandler(async (req, res) => {
     const id = Number(req.params.id);

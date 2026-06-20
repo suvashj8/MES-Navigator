@@ -1,5 +1,6 @@
 import { GRADE_POINTS } from './db.js';
 import { one, all } from './db.js';
+import { formatStaffRegNo } from './lib/staffRegNo.js';
 
 const GRADE_ORDER = ['AA', 'A', 'B', 'C'];
 
@@ -55,6 +56,7 @@ export async function getScorecards({ from, to, department, staff_id, family, gr
     return {
       staff_id: r.staff_id,
       reg_no: r.reg_no,
+      reg_display: formatStaffRegNo(r.reg_no),
       staff_name: r.staff_name,
       department: r.department,
       total_entries: total,
@@ -137,16 +139,20 @@ export async function getDashboardTrend(endDate, days = 7) {
     [from, to]
   );
 
+  const emptyGrades = () => ({ C: 0, B: 0, A: 0, AA: 0 });
   const byDate = {};
   for (let i = 0; i < days; i++) {
     const d = new Date(start);
     d.setDate(start.getDate() + i);
     const key = d.toISOString().slice(0, 10);
-    byDate[key] = { date: key, total: 0, grades: { C: 0, B: 0, A: 0, AA: 0 } };
+    byDate[key] = { date: key, total: 0, grades: emptyGrades() };
   }
   for (const r of rows) {
     if (!byDate[r.entry_date]) continue;
-    byDate[r.entry_date].grades[r.grade] = Number(r.count);
+    const g = r.grade;
+    if (g in byDate[r.entry_date].grades) {
+      byDate[r.entry_date].grades[g] = Number(r.count);
+    }
     byDate[r.entry_date].total += Number(r.count);
   }
   return { from, to, days: Object.values(byDate) };

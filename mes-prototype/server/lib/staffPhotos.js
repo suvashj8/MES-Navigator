@@ -68,12 +68,15 @@ export function parseDataUrlPhoto(dataUrl) {
   return { buffer, mimeType };
 }
 
+import { formatStaffRegNo } from './staffRegNo.js';
+
 export function formatStaffRow(row) {
   if (!row) return null;
   const has_photo = Boolean(row.has_photo ?? row.photo_path);
   return {
     id: row.id,
     reg_no: row.reg_no,
+    reg_display: formatStaffRegNo(row.reg_no),
     name: row.name,
     department: row.department,
     is_active: row.is_active,

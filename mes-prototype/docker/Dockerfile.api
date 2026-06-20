@@ -1,0 +1,33 @@
+# Build from repo parent so the Excel workbook is included:
+#   docker compose build mes-api   (from mes-prototype/)
+FROM node:20-alpine
+
+RUN apk add --no-cache tini
+
+WORKDIR /app
+
+COPY ["bead for life (1).xlsx", "/app/data/bead-for-life.xlsx"]
+
+COPY mes-prototype/server/package.json mes-prototype/server/package-lock.json ./
+RUN npm ci --omit=dev
+
+COPY mes-prototype/server/ ./
+
+ENV NODE_ENV=production \
+    PORT=3101 \
+    HOST=0.0.0.0 \
+    EXCEL_PATH=/app/data/bead-for-life.xlsx \
+    STAFF_UPLOAD_DIR=/app/uploads/staff
+
+RUN mkdir -p /app/uploads/staff
+
+COPY mes-prototype/docker/api-entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
+
+EXPOSE 3101
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD node -e "fetch('http://127.0.0.1:3101/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+ENTRYPOINT ["/sbin/tini", "--", "/entrypoint.sh"]
+CMD ["node", "index.js"]

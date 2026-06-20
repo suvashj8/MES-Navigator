@@ -5,9 +5,8 @@ import Toast from '../components/Toast';
 import DepartmentBanner from '../components/DepartmentBanner';
 import DateInput from '../components/DateInput';
 import PageShell from '../components/PageShell';
-import FormField from '../components/FormField';
 import { labels } from '../labels';
-import { controlCls, FORM_ROW_CLS, nextWorkflowStep } from '../features/dailyEntry/utils';
+import { FORM_ROW_CLS, nextWorkflowStep } from '../features/dailyEntry/utils';
 import { useDailyEntryScope } from '../features/dailyEntry/hooks/useDailyEntryScope';
 import { useDailyEntryEntries } from '../features/dailyEntry/hooks/useDailyEntryEntries';
 import { useWorkerPicker } from '../features/dailyEntry/hooks/useWorkerPicker';
@@ -35,9 +34,6 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
     date,
     setDate,
     department,
-    setDepartment,
-    departments,
-    deptLocked,
     activities,
     staffList,
     prefillStaffId,
@@ -208,31 +204,6 @@ export default function DailyEntryPage({ floorMode = false }: { floorMode?: bool
                 floorMode={floorMode}
               />
             </div>
-
-            {!deptLocked && (
-              <FormField
-                label={labels.departmentFilter.en}
-                nepali={labels.departmentFilter.ne}
-                showSubtitle={showNepali}
-                reserveSubtitleLine={showNepali}
-                floorMode={floorMode}
-                className="flex-1 min-w-[10rem] max-w-xs"
-              >
-                <select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  className={controlCls(floorMode)}
-                  disabled={deptLocked}
-                >
-                  <option value="">{labels.selectDepartment.en}</option>
-                  {departments.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            )}
 
             <WorkerPickerField
               floorMode={floorMode}

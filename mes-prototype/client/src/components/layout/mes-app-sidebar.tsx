@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   { to: '/floor', label: 'Floor entry', group: 'Production', permission: 'daily-grading:write', icon: Factory },
   { to: '/daily-entry', label: "Today's production", group: 'Production', permission: 'daily-grading:write', icon: PenLine },
   { to: '/reports', label: 'Scorecards', group: 'Reports', permission: 'reports:read', icon: BarChart3 },
-  { to: '/staff', label: 'Staff', group: 'Reports', permission: 'reports:read', icon: Users },
+  { to: '/staff', label: 'Staff And Department', group: 'Reports', permission: 'reports:read', icon: Users },
   { to: '/sync', label: 'Sync Center', group: 'Reports', permission: 'daily-grading:write', icon: RefreshCw },
   { to: '/deleted-entries', label: 'Deleted entries', group: 'Reports', permission: 'daily-grading:delete', icon: Trash2 },
   { to: '/product-master', label: 'Product master', group: 'Setup', permission: 'reports:read', icon: Package },

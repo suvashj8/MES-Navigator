@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, type StandardProduct, type Staff } from '../api';
 import ModalCloseButton from './ModalCloseButton';
 import { useAuth } from '../hooks/useAuth';
+import { displayStaffRegNo } from '../utils/staffRegNo';
 
 type NavAction = { id: string; label: string; hint?: string; to: string };
 
@@ -69,7 +70,7 @@ export default function CommandPalette({ open, onClose, initialQuery = '', navAc
       kind: 'worker',
       key: `w-${s.id}`,
       label: s.name,
-      hint: `Reg ${s.reg_no} · ${s.department}`,
+      hint: `${displayStaffRegNo(s)} · ${s.department}`,
       to: `${entryPath}?staff_id=${encodeURIComponent(String(s.id))}`,
     }));
 

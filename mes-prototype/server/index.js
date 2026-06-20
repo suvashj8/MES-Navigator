@@ -3,16 +3,17 @@ import { seedDefaultUsers } from './auth.js';
 import { createApp } from './app.js';
 import { loadDevPorts } from './lib/devPorts.js';
 
-const devPorts = loadDevPorts();
-const PORT = Number(process.env.PORT) || devPorts.api;
+const devPorts = process.env.NODE_ENV !== 'production' ? loadDevPorts() : null;
+const PORT = Number(process.env.PORT) || devPorts?.api || 3101;
+const HOST = process.env.HOST || '0.0.0.0';
 
 async function start() {
   await initSchema();
   await seedDefaultUsers();
   const app = createApp();
-  const server = app.listen(PORT, () => {
-    console.log(`MES API running on http://localhost:${PORT}`);
-    console.log(`MES UI (dev): http://localhost:${devPorts.ui}`);
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`MES API running on http://${HOST}:${PORT}`);
+    if (devPorts) console.log(`MES UI (dev): http://localhost:${devPorts.ui}`);
   });
   server.on('error', (e) => {
     if (e?.code === 'EADDRINUSE') {

@@ -1,5 +1,6 @@
 import StaffAvatar from '../../../components/StaffAvatar';
 import type { Staff } from '../../../api';
+import { displayStaffRegNo } from '../../../utils/staffRegNo';
 
 export default function SelectedWorkerBanner({
   worker,
@@ -34,7 +35,7 @@ export default function SelectedWorkerBanner({
             {worker.name}
           </p>
           <p className="text-xs text-slate-400 truncate">
-            <span className="font-mono">Reg {worker.reg_no}</span>
+            <span className="font-mono">{displayStaffRegNo(worker)}</span>
             <span className="mx-2">·</span>
             {worker.department}
           </p>

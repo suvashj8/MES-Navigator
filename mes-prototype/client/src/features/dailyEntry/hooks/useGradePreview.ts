@@ -42,7 +42,7 @@ export function useGradePreview(opts: {
       return;
     }
     api
-      .lookupStandard(prodCode, costCenter, date)
+      .lookupStandard(prodCode, costCenter, date, department || selectedWorker?.department || undefined)
       .then((s) => {
         setStandard(s);
         setMissingStandard(false);
@@ -51,7 +51,7 @@ export function useGradePreview(opts: {
         setStandard(null);
         setMissingStandard(true);
       });
-  }, [prodCode, costCenter, date]);
+  }, [prodCode, costCenter, date, department, selectedWorker?.department]);
 
   useEffect(() => {
     if (!missingStandard || !prodCode || !costCenter) return;
@@ -92,10 +92,16 @@ export function useGradePreview(opts: {
       return;
     }
     api
-      .previewGrade({ prod_code: prodCode, cost_center_code: costCenter, quantity: qty, entry_date: date })
+      .previewGrade({
+        prod_code: prodCode,
+        cost_center_code: costCenter,
+        quantity: qty,
+        entry_date: date,
+        department: department || selectedWorker?.department || undefined,
+      })
       .then(setPreview)
       .catch(() => setPreview(null));
-  }, [standard, quantity, prodCode, costCenter, date]);
+  }, [standard, quantity, prodCode, costCenter, date, department, selectedWorker?.department]);
 
   return { standard, preview, missingStandard, quantityInputRef };
 }
